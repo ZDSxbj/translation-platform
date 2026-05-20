@@ -1,0 +1,20 @@
+# Code Translation
+## Task Description                    
+Translate the focal C++ code to Rust 
+
+## Basic Details about the code
+Here are the basic details about the code under translation
+<focal C++ code>
+[source code under translation]
+{corpus_func}
+</focal C++ code>
+
+
+## Note
+The translation process must adhere to the following rules:
+    - keep the function name and variable(including global variable and loacl variable) name.
+    
+## Output Format
+```Rust
+** (only reply with the translated result of the focal code) **
+```

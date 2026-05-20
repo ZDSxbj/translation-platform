@@ -1,0 +1,26 @@
+# C++ to Rust Translation Framework Dependencies
+# Install with: pip install -r requirements.txt
+
+# Tree-sitter for code parsing
+tree-sitter>=0.20.0
+tree-sitter-cpp>=0.20.0
+tree-sitter-rust>=0.20.0
+
+# HTTP client for LLM API
+openai>=1.0.0
+httpx>=0.24.0
+
+# Utility libraries
+tqdm>=4.65.0
+pathlib2>=2.3.0
+
+# PyTorch for Jina Reranker (optional, for RAG)
+# torch>=2.0.0
+# transformers>=4.30.0
+
+# BM25 for retrieval (optional, for RAG)
+rank-bm25>=0.2.2
+
+# JSON streaming (optional, for large datasets)
+ijson>=3.2.0
+

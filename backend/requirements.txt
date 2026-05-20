@@ -1,0 +1,36 @@
+# His2Trans Translation Platform — Backend Dependencies
+# Install: pip install -r requirements.txt
+
+# Web framework
+flask>=3.0,<4.0
+flask-cors>=6.0
+flask-socketio>=5.0
+python-socketio>=5.0
+werkzeug>=3.0
+
+# Configuration
+python-dotenv>=1.0
+
+# LLM API client (OpenAI-compatible)
+openai>=1.0
+httpx>=0.24
+requests>=2.28
+
+# Code parsing (tree-sitter)
+tree-sitter>=0.22,<0.26
+tree-sitter-cpp>=0.23
+tree-sitter-rust>=0.23
+
+# RAG / BM25 retrieval
+rank-bm25>=0.2.2
+
+# Progress bars (LLM translate progress)
+tqdm>=4.65
+
+# NLP (NLTK — for signature matching / text preprocessing)
+nltk>=3.8
+numpy>=1.24
+
+# Jina Reranker / RAG (optional, requires GPU)
+# torch>=2.0
+# transformers>=4.30

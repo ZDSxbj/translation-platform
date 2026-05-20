@@ -1,0 +1,62 @@
+# ============================================================
+# Environment & Secrets
+# ============================================================
+.env
+*.pyc
+__pycache__/
+*.egg-info/
+*.pem
+*.key
+
+# ============================================================
+# Backend — Uploads & Outputs (runtime artifacts)
+# ============================================================
+backend/uploads/
+backend/outputs/
+backend/__pycache__/
+backend/.pytest_cache/
+
+# ============================================================
+# Backend — Large Data Resources
+# ============================================================
+# RAG knowledge base + BM25 index — extracted from .tar.gz at startup
+backend/data/rag/*.json
+backend/data/rag/*.pkl
+# OpenHarmony SDK C++ stubs (external resource, see README)
+backend/data/ohos/
+# NLTK tokenizer data (downloadable via nltk.download() at startup)
+backend/data/nltk_data/
+
+# ============================================================
+# Backend — Framework fallback workspace
+# ============================================================
+backend/app/engines/his2trans/framework/workspace/
+
+# ============================================================
+# Frontend
+# ============================================================
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ============================================================
+# IDE / Editor
+# ============================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ============================================================
+# OS
+# ============================================================
+.DS_Store
+Thumbs.db
+
+# ============================================================
+# Misc
+# ============================================================
+*.log
+*.bak
+tmp/
