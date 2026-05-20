@@ -95,7 +95,13 @@ def get_stage_logs(session_id, stage_id):
 
 @translate_bp.route("/<session_id>/output/tree", methods=["GET"])
 def get_output_tree(session_id):
-    """Get the output directory tree after translation."""
+    """Get the output directory tree after translation.
+
+    Query params:
+        subdir: Relative path within output (e.g. 'workspace/final_projects')
+                Defaults to 'workspace/final_projects' to show only the final
+                translated Rust project, not all intermediate artifacts.
+    """
     pipeline = get_pipeline_manager()
     state = pipeline.get_session_state(session_id)
     if state is None:
@@ -105,9 +111,18 @@ def get_output_tree(session_id):
     if not output_path or not __import__("os").path.isdir(output_path):
         return jsonify({"code": 404, "message": "Output not yet available"}), 404
 
+    subdir = request.args.get("subdir", "workspace/final_projects")
+    target_path = _os.path.normpath(_os.path.join(output_path, subdir))
+    # Security: ensure resolved path is still within output_path
+    if not target_path.startswith(_os.path.normpath(output_path)):
+        return jsonify({"code": 403, "message": "Path traversal denied"}), 403
+
+    if not _os.path.isdir(target_path):
+        return jsonify({"code": 200, "data": {"file_tree": [], "path": subdir}})
+
     from app.api.upload import _build_file_tree
-    tree = _build_file_tree(output_path)
-    return jsonify({"code": 200, "data": {"file_tree": tree}})
+    tree = _build_file_tree(target_path, original_root=_os.path.normpath(output_path))
+    return jsonify({"code": 200, "data": {"file_tree": tree, "path": subdir}})
 
 
 @translate_bp.route("/<session_id>/output/file", methods=["GET"])
@@ -151,7 +166,8 @@ def get_workspace_tree(session_id):
         return jsonify({"code": 200, "data": {"file_tree": [], "path": subdir}})
 
     from app.api.upload import _build_file_tree
-    tree = _build_file_tree(workspace_path)
+    workspace_root = _os.path.join(output_path, "workspace")
+    tree = _build_file_tree(workspace_path, original_root=workspace_root)
     return jsonify({"code": 200, "data": {"file_tree": tree, "path": subdir}})
 
 

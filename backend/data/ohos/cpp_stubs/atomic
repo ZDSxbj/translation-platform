@@ -1,0 +1,20 @@
+#ifndef C2R_CPP_STUB_ATOMIC
+#define C2R_CPP_STUB_ATOMIC
+
+namespace std {
+
+template<typename T>
+class atomic {
+public:
+    atomic();
+    atomic(T val);
+    T load() const;
+    void store(T val);
+    T exchange(T val);
+private:
+    T _val;
+};
+
+}  // namespace std
+
+#endif

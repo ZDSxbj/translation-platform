@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: '/api',
-  timeout: 30000,
+  timeout: 600000,  // 10 minutes — stages can take several minutes
 })
 
 // Response interceptor for error handling
@@ -60,7 +60,9 @@ export function getSessionState(sessionId) {
 }
 
 export function runStage(sessionId, stageId) {
-  return api.post(`/translate/${sessionId}/stage/${stageId}/run`)
+  return api.post(`/translate/${sessionId}/stage/${stageId}/run`, {}, {
+    timeout: 1800000,  // 30 minutes — Stage 3 translation can take 10+ minutes
+  })
 }
 
 export function getStageResult(sessionId, stageId) {
@@ -71,8 +73,8 @@ export function getStageLogs(sessionId, stageId) {
   return api.get(`/translate/${sessionId}/stage/${stageId}/logs`)
 }
 
-export function getOutputTree(sessionId) {
-  return api.get(`/translate/${sessionId}/output/tree`)
+export function getOutputTree(sessionId, subdir = '') {
+  return api.get(`/translate/${sessionId}/output/tree`, { params: subdir ? { subdir } : {} })
 }
 
 export function getOutputFile(sessionId, path) {

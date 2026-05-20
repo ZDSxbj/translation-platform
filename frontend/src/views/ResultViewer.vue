@@ -312,6 +312,7 @@ async function onDownloadReport() {
   border-right: 1px solid #ebeef5;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
 }
 .panel-title {
   display: flex;

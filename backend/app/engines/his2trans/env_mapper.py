@@ -205,10 +205,15 @@ class EnvMapper:
                 env["BM25_INDEX_PATH"] = p
                 break
 
-        # OHOS root fallback
+        # OHOS root fallback — auto-extract if .tar.gz present
         if not env.get("OHOS_ROOT"):
+            ohos_dir = os.path.join(cls._PLATFORM_DATA_DIR, "ohos")
+            ohos_extracted = os.path.join(ohos_dir, "ohos_root_min")
+            ohos_archive = os.path.join(ohos_dir, "ohos_root_min.tar.gz")
+            if not os.path.isdir(ohos_extracted) and os.path.isfile(ohos_archive):
+                _extract_ohos_archive(ohos_archive, ohos_dir)
             ohos_candidates = [
-                os.path.join(cls._PLATFORM_DATA_DIR, "ohos", "ohos_root_min"),
+                ohos_extracted,
                 os.path.join(fw, "..", "..", "..", "data", "ohos", "ohos_root_min"),
                 os.path.join(fw, "data", "ohos", "ohos_root_min"),
             ]
@@ -228,3 +233,15 @@ class EnvMapper:
         if not env.get("HF_HUB_CACHE"):
             env["HF_HUB_CACHE"] = os.path.join(hf_cache, "hub")
         env["HF_HUB_DISABLE_EXPERIMENTAL_WARNING"] = "1"
+
+
+def _extract_ohos_archive(archive_path: str, dest_dir: str) -> None:
+    """Extract ohos_root_min.tar.gz on first use."""
+    import tarfile
+    import sys
+    print(f"[EnvMapper] Extracting OHOS SDK archive ({os.path.basename(archive_path)})...",
+          file=sys.stderr)
+    os.makedirs(dest_dir, exist_ok=True)
+    with tarfile.open(archive_path, "r:gz") as tar:
+        tar.extractall(dest_dir)
+    print("[EnvMapper] OHOS SDK extraction complete.", file=sys.stderr)

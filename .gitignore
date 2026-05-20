@@ -22,8 +22,8 @@ backend/.pytest_cache/
 # RAG knowledge base + BM25 index — extracted from .tar.gz at startup
 backend/data/rag/*.json
 backend/data/rag/*.pkl
-# OpenHarmony SDK C++ stubs (external resource, see README)
-backend/data/ohos/
+# OpenHarmony SDK C++ stubs — .tar.gz is tracked, directory auto-extracted
+backend/data/ohos/ohos_root_min/
 # NLTK tokenizer data (downloadable via nltk.download() at startup)
 backend/data/nltk_data/
 

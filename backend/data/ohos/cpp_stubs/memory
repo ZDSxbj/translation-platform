@@ -1,0 +1,35 @@
+#ifndef C2R_CPP_STUB_MEMORY
+#define C2R_CPP_STUB_MEMORY
+
+namespace std {
+
+template<typename T>
+class shared_ptr {
+public:
+    shared_ptr();
+    shared_ptr(T* ptr);
+    ~shared_ptr();
+    T* get() const;
+    T& operator*() const;
+    T* operator->() const;
+private:
+    T* _ptr;
+    long* _refcount;
+};
+
+template<typename T>
+class unique_ptr {
+public:
+    unique_ptr();
+    unique_ptr(T* ptr);
+    ~unique_ptr();
+    T* get() const;
+    T& operator*() const;
+    T* operator->() const;
+private:
+    T* _ptr;
+};
+
+}  // namespace std
+
+#endif

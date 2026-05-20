@@ -1,0 +1,4 @@
+#ifndef C2R_CPP_STUB_CSTDINT
+#define C2R_CPP_STUB_CSTDINT
+#include <stdint.h>
+#endif

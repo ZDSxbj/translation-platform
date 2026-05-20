@@ -106,9 +106,9 @@ export const useTranslationStore = defineStore('translation', {
       return res.data?.data || []
     },
 
-    async getOutputTree() {
+    async getOutputTree(subdir = '') {
       if (!this.sessionId) return []
-      const res = await getOutputTree(this.sessionId)
+      const res = await getOutputTree(this.sessionId, subdir)
       return res.data?.data?.file_tree || []
     },
 

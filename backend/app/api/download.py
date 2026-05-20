@@ -19,11 +19,34 @@ def download_result(session_id):
     if not output_path or not os.path.isdir(output_path):
         return jsonify({"code": 404, "message": "Output not yet available"}), 404
 
+    # Directories / file patterns to exclude from the result ZIP
+    _EXCLUDE_DIRS = {
+        "target",          # Cargo build artifacts (can be 10-100 MB)
+        "rag",             # RAG knowledge base copies/symlinks (~184 MB)
+        "llm_prompts",     # Intermediate prompt files
+        "repair_history",  # Iterative repair logs
+        "repair_results",  # Intermediate repair results
+        "repair_results_1",
+        "extracted",       # Intermediate extraction artifacts
+        "projects",        # Intermediate project setup
+        "signature_matches",  # RAG signature match results
+        "source_skeletons",   # Duplicate skeleton copy
+        "test_results_repair_1",
+        "__pycache__",
+    }
+    _EXCLUDE_SUFFIXES = (".o", ".d")
+
     # Create in-memory ZIP
     buf = io.BytesIO()
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
         for root, dirs, files in os.walk(output_path):
+            # Prune excluded directories in-place
+            dirs[:] = [d for d in dirs if d not in _EXCLUDE_DIRS and not d.startswith(".")]
             for fn in files:
+                if fn.startswith("."):
+                    continue
+                if fn.endswith(_EXCLUDE_SUFFIXES):
+                    continue
                 full_path = os.path.join(root, fn)
                 arcname = os.path.relpath(full_path, output_path)
                 zf.write(full_path, arcname)

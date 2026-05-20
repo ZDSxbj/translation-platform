@@ -1,0 +1,4 @@
+#ifndef C2R_CPP_STUB_CSTDDEF
+#define C2R_CPP_STUB_CSTDDEF
+#include <stddef.h>
+#endif

@@ -113,7 +113,8 @@ class PipelineManager:
         if stage["status"] == "completed":
             raise ValueError(f"Stage already completed: {stage_id}")
         if stage["status"] == "running":
-            raise ValueError(f"Stage already running: {stage_id}")
+            # Frontend may have timed out and is retrying — reset and re-run
+            session.add_log(stage_id, "Stage was marked running (likely timed-out frontend) — resetting and re-running", "warn")
 
         # Mark as running
         stage["status"] = "running"

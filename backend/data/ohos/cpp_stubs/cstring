@@ -1,0 +1,4 @@
+#ifndef C2R_CPP_STUB_CSTRING
+#define C2R_CPP_STUB_CSTRING
+#include <string.h>
+#endif

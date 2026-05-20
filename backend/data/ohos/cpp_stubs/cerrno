@@ -1,0 +1,4 @@
+#ifndef C2R_CPP_STUB_CERRNO
+#define C2R_CPP_STUB_CERRNO
+#include <errno.h>
+#endif

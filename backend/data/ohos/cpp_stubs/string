@@ -1,0 +1,41 @@
+#ifndef C2R_CPP_STUB_STRING
+#define C2R_CPP_STUB_STRING
+
+#include <stddef.h>
+
+namespace std {
+
+template<typename CharT>
+struct char_traits {
+    typedef CharT char_type;
+    typedef size_t size_type;
+};
+
+template<typename CharT, typename Traits = char_traits<CharT>>
+class basic_string {
+public:
+    typedef CharT value_type;
+    typedef size_t size_type;
+
+    basic_string();
+    basic_string(const CharT* s);
+    basic_string(const basic_string& other);
+    ~basic_string();
+
+    size_type size() const;
+    size_type length() const;
+    const CharT* c_str() const;
+    const CharT* data() const;
+    bool empty() const;
+
+private:
+    CharT* _data;
+    size_type _size;
+    size_type _capacity;
+};
+
+typedef basic_string<char> string;
+
+}  // namespace std
+
+#endif

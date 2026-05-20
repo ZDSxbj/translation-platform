@@ -635,8 +635,8 @@ class His2TransEngine(BaseEngine):
                 src = os.path.join(base, basename)
                 if os.path.isfile(src):
                     try:
-                        shutil.copy2(src, dst)
-                        log(f"  Copied {dst_name} → workspace/rag/")
+                        os.symlink(src, dst)
+                        log(f"  Symlinked {dst_name} → workspace/rag/")
                     except OSError:
                         pass
                     break

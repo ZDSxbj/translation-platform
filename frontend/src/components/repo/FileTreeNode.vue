@@ -36,7 +36,9 @@
       @click="onSelect"
     >
       <span class="node-toggle">
-        <el-icon :size="14">{{ fileIcon }}</el-icon>
+        <el-icon :size="14">
+          <component :is="fileIcon" />
+        </el-icon>
       </span>
       <span class="node-name">{{ node.name }}</span>
     </div>
@@ -55,7 +57,7 @@ const props = defineProps({
   selectedPath: { type: String, default: null },
 })
 
-defineEmits(['file-selected'])
+const emit = defineEmits(['file-selected'])
 
 const expanded = ref(false)
 
@@ -67,7 +69,7 @@ const fileIcon = computed(() => {
 })
 
 function onSelect() {
-  // Emit with node data; parent handles fetching
+  emit('file-selected', props.node)
 }
 </script>
 
