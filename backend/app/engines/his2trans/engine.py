@@ -79,8 +79,11 @@ class His2TransEngine(BaseEngine):
         workspace = os.path.join(output_path, "workspace")
         os.makedirs(workspace, exist_ok=True)
 
-        framework_path = config.get("his2trans_framework", str(_FRAMEWORK_DIR))
-        framework_path = os.path.abspath(framework_path)
+        configured = (config.get("his2trans_framework") or "").strip()
+        if configured and not configured.startswith("/absolute/path/to/") and os.path.isdir(configured):
+            framework_path = os.path.abspath(configured)
+        else:
+            framework_path = str(_FRAMEWORK_DIR)
         runner = FrameworkRunner(framework_path, config)
 
         log_callback(f"[Engine] Starting {stage_id}...", "info")
@@ -190,6 +193,11 @@ class His2TransEngine(BaseEngine):
 
         # Step 3: Generate function_signatures.json for RAG
         log("--- Step 3/3: Generating function_signatures.json for RAG ---")
+        # Filter header-inlined functions (DList*, etc.) from the manifest so
+        # downstream stages only translate the project's own 26 functions,
+        # matching the paper's evaluation scope.
+        _filtered = self._filter_manifest_functions(workspace, project_name, log)
+
         try:
             sig_count = self._generate_function_signatures(workspace, project_name, log)
             log(f"  Generated {sig_count} function signatures for RAG")
@@ -253,68 +261,54 @@ class His2TransEngine(BaseEngine):
         log("=" * 50)
         log("Stage 3: Function Body Translation + Compile + Repair")
         log("=" * 50)
-        max_repair = config.get("max_repair", 5)
+
         model = config.get("model", "deepseek-v3.2")
         project_name = _get_project_name(os.path.dirname(source_path))
-        log(f"Model: {model}, Max repair rounds: {max_repair}, Project: {project_name}")
+        max_repair = config.get("max_repair", 5)
+        log(f"Model: {model}, Max repair: {max_repair}, Project: {project_name}")
 
-        # Derive framework-expected subdirs
-        extracted_dir = os.path.join(workspace, "extracted", project_name)
-        translated_dir = os.path.join(workspace, "translated", project_name)
-        test_results_dir = os.path.join(workspace, "test_results")
-        repair_results_dir = os.path.join(workspace, "repair_results")
-        skeletons_dir = os.path.join(workspace, "skeletons", project_name)
-        rag_signatures_dir = os.path.join(workspace, "source_skeletons", project_name)
-
-        # Populate signature_matches/ with per-function .txt files
-        # translate_function.py reads individual signature files from this dir
+        # Populate per-function .txt signature files that incremental_translate
+        # reads during its translation loop.
         sig_count = self._populate_signature_match_files(
             workspace, project_name, model, log)
 
-        # Step 1: Translate function bodies
-        # Args: source_dir target_dir llm dependencies_path rag_path_function
-        log("--- Step 1/4: translate_function.py ---")
-        # dependencies_path must point to the skeleton project root
-        # (translate_function.py reads {dependencies_path}/src/{file}.rs)
-        self._run_script(runner, "stage3_translate/translate_function.py",
+        # Delegate to incremental_translate.py which handles the full pipeline
+        # internally: translation → compile-check → repair → compat management
+        # → merge — all integrated with per-function verification.
+        extra_env = {
+            "C2R_REQUIRE_TU_CLOSURE": "0",
+            "C2R_TRUTH_MODE": "0",
+            "C2R_USE_RAG_CONTEXT": str(config.get("use_rag", True)).lower(),
+        }
+
+        # Patch build.rs in the skeleton to include native/include/ as a
+        # RELATIVE path.  The cc build runs with CWD=project_dir, so relative
+        # paths resolve correctly in both the skeleton and the incremental_work
+        # copy.  (The skeleton_builder only emits an absolute path pointing to
+        # the skeleton's own native/include/, which is stale once
+        # incremental_translate copies the tree to incremental_work/.)
+        build_rs = os.path.join(workspace, "skeletons", project_name, "build.rs")
+        if os.path.isfile(build_rs):
+            try:
+                content = open(build_rs).read()
+            except Exception:
+                content = ""
+            if '.include("native/include")' not in content:
+                patched = re.sub(
+                    r'(\s*)\.include\("src"\)',
+                    r'\1.include("native/include")\n\1.include("src")',
+                    content, count=1
+                )
+                if patched != content:
+                    with open(build_rs, "w") as f:
+                        f.write(patched)
+                    log("  Patched build.rs: added relative native/include")
+
+        log("--- Running incremental_translate.py (full Stage 3 pipeline) ---")
+        self._run_script(runner, "stage3_translate/incremental_translate.py",
                          source_path, workspace, log, timeout=7200,
-                         args=[
-                             os.path.join(extracted_dir, "functions"),
-                             translated_dir,
-                             model,
-                             skeletons_dir,
-                             rag_signatures_dir,
-                         ])
-
-        # Step 2: Compile-check + auto-repair
-        # Args: functions_dir translated_dir test_results_dir repair_results_dir llm skeletons_dir
-        log("--- Step 2/4: auto_repair_rust.py ---")
-        self._run_script(runner, "stage3_translate/auto_repair_rust.py",
-                         source_path, workspace, log, timeout=7200,
-                         args=[
-                             os.path.join(extracted_dir, "functions"),
-                             translated_dir,
-                             test_results_dir,
-                             repair_results_dir,
-                             model,
-                             skeletons_dir,
-                         ])
-
-        # Step 3: Generate test result tracking files
-        # (auto_repair_rust.py runs cargo build but doesn't persist results)
-        log("--- Step 3/4: Generating test result tracking ---")
-        try:
-            passed = self._generate_test_results(workspace, project_name, model, log)
-            log(f"  Generated test results for {passed} functions")
-        except Exception as e:
-            log(f"  Warning: test result generation failed: {e}", "warn")
-
-        # Step 4: Merge final project
-        # Args: project_name llm_name
-        log("--- Step 4/4: merge_final_project.py ---")
-        self._run_script(runner, "stage3_translate/merge_final_project.py",
-                         source_path, workspace, log, timeout=1800,
-                         args=[project_name, model])
+                         extra_env=extra_env,
+                         args=[project_name, model, str(max_repair)])
 
         rust_files = list(Path(workspace).rglob("*.rs"))
         log(f"Final output: {len(rust_files)} Rust files")
@@ -371,6 +365,42 @@ class His2TransEngine(BaseEngine):
             "details": report,
         }
 
+    def _filter_manifest_functions(self, workspace, project_name, log):
+        """Remove header-inlined functions (DList, etc.) from the manifest.
+
+        When clang -E preprocessing is enabled, static-inline helpers from
+        headers are expanded into every .c file.  These duplicated functions
+        (same name appearing in 5-7 source files) are OHOS runtime utilities,
+        not project code.  Projects have exactly one entry per function name.
+        """
+        manifest_path = os.path.join(workspace, "extracted", project_name,
+                                     "functions_manifest.json")
+        if not os.path.isfile(manifest_path):
+            return 0
+        with open(manifest_path) as f:
+            manifest = json.load(f)
+        funcs = manifest.get("functions", [])
+        if not funcs:
+            return 0
+
+        # Count occurrences per function name
+        name_counts = {}
+        for f in funcs:
+            n = f.get("name", "")
+            name_counts[n] = name_counts.get(n, 0) + 1
+
+        kept = [f for f in funcs if name_counts.get(f.get("name", ""), 0) == 1]
+        removed = len(funcs) - len(kept)
+
+        if removed:
+            manifest["functions"] = kept
+            with open(manifest_path, "w") as f:
+                json.dump(manifest, f, indent=2, ensure_ascii=False)
+            log(f"  Filtered manifest: removed {removed} header-inlined "
+                f"functions ({len(kept)} project functions remain)")
+
+        return removed
+
     # ==================================================================
     # RAG setup helpers
     # ==================================================================
@@ -400,14 +430,47 @@ class His2TransEngine(BaseEngine):
                 except Exception:
                     continue
                 # Match: pub extern "C" fn funcName(params) -> ReturnType {
-                for m in re.finditer(
-                    r'pub\s+(?:unsafe\s+)?extern\s+"C"\s+fn\s+(\w+)\s*\((.*?)\)\s*(->\s*[^{;]+)?',
-                    content
-                ):
+                extern_c_re = re.compile(
+                    r'pub\s+(?:unsafe\s+)?extern\s+"C"\s+fn\s+(\w+)\s*\((.*?)\)\s*(->\s*[^{;]+)?'
+                )
+                for m in extern_c_re.finditer(content):
                     func_name = m.group(1)
                     params = m.group(2).strip()
                     ret = (m.group(3) or "()").strip()
                     sig = f"pub extern \"C\" fn {func_name}({params}){ret}"
+                    rust_sigs[func_name] = sig
+                    rust_sigs.setdefault(func_name, sig)  # keep first match
+
+                # Also match plain fn definitions (static C functions whose
+                # Rust skeleton uses `fn name(...){…}` without `extern "C"`).
+                # These are internal helpers not visible in public headers.
+                for m in re.finditer(
+                    r'(?:pub(?:\s*\(\s*crate\s*\))?\s+)?'
+                    r'fn\s+(\w+)\s*\((.*?)\)\s*(->\s*[^{;]+)?\s*\{',
+                    content
+                ):
+                    func_name = m.group(1)
+                    if func_name in rust_sigs:
+                        continue  # already captured as extern "C"
+                    params = m.group(2).strip()
+                    ret = (m.group(3) or "").strip()
+                    sig = f"fn {func_name}({params}){ret}".rstrip()
+                    rust_sigs[func_name] = sig
+
+                # Also match fn declarations in extern "C" blocks (e.g.
+                # `pub fn HdfDeviceInfoConstruct() -> i32; // placeholder`).
+                # These end with `;` and are extern fns without the keyword.
+                for m in re.finditer(
+                    r'(?:pub(?:\s*\(\s*crate\s*\))?\s+)?'
+                    r'fn\s+(\w+)\s*\((.*?)\)\s*(->\s*[^;{]+)?\s*;',
+                    content
+                ):
+                    func_name = m.group(1)
+                    if func_name in rust_sigs:
+                        continue
+                    params = m.group(2).strip()
+                    ret = (m.group(3) or "").strip()
+                    sig = f"pub extern \"C\" fn {func_name}({params}){ret}".rstrip()
                     rust_sigs[func_name] = sig
 
         # Build function_signatures from manifest and extracted Rust signatures
@@ -448,8 +511,9 @@ class His2TransEngine(BaseEngine):
         with open(sig_json_path) as f:
             func_file_map = json.load(f)
 
-        sig_match_dir = os.path.join(workspace, "signature_matches", project_name,
-                                     f"translate_by_{model}")
+        # incremental_translate.py reads .txt files from signature_matches/<project>/
+        # directly (no llm-name subdirectory).
+        sig_match_dir = os.path.join(workspace, "signature_matches", project_name)
         os.makedirs(sig_match_dir, exist_ok=True)
 
         count = 0
@@ -641,59 +705,14 @@ class His2TransEngine(BaseEngine):
                         pass
                     break
 
-    def _generate_test_results(self, workspace, project_name, model, log):
-        """Generate test result tracking files for merge_final_project.
-
-        The auto_repair_rust.py runs cargo build but doesn't persist per-function
-        pass/fail files. This method creates them from the translated function files
-        so that merge_final_project can find and merge them into the skeleton.
-        """
-        llm_name = f"translate_by_{model}"
-        translated_dir = os.path.join(workspace, "translated", project_name, llm_name)
-        test_results_dir = os.path.join(workspace, "test_results", project_name, llm_name)
-        os.makedirs(test_results_dir, exist_ok=True)
-
-        if not os.path.isdir(translated_dir):
-            return 0
-
-        count = 0
-        for txt_file in Path(translated_dir).glob("*.txt"):
-            # Read the translated function
-            try:
-                content = txt_file.read_text(encoding="utf-8")
-            except Exception:
-                continue
-
-            # Extract translated function body
-            body_match = re.search(r'<translated function>\s*\n?(.*?)\n?\s*</translated function>',
-                                   content, re.DOTALL)
-            if not body_match:
-                continue
-            func_body = body_match.group(1).strip()
-            # Skip empty translations and empty markdown code blocks
-            if not func_body:
-                continue
-            code_blocks = re.findall(r'```(?:\w+)?\s*(.*?)```', func_body, re.DOTALL)
-            has_code = any(b.strip() for b in code_blocks)
-            if not has_code and not re.search(r'(?<![`])\b(fn|impl|pub|use|mod|struct|enum|trait|const|static|let|mut|if|for|while|loop|match|return)\b', func_body):
-                continue  # Skip responses with no actual Rust code
-
-            # Write test result (merge script checks for "Success" prefix)
-            test_file = os.path.join(test_results_dir, txt_file.name)
-            with open(test_file, "w", encoding="utf-8") as f:
-                f.write(f"Success\n{func_body}")
-            count += 1
-
-        return count
-
     # ==================================================================
     # Script runner helper
     # ==================================================================
 
-    def _run_script(self, runner, script_rel, source_path, workspace, log, timeout=1800, args=None):
+    def _run_script(self, runner, script_rel, source_path, workspace, log, timeout=1800, args=None, extra_env=None):
         """Run a framework script via FrameworkRunner, with env setup and optional CLI args."""
         try:
             runner.run_script(script_rel, source_path, workspace, log,
-                            timeout=timeout, args=args)
+                            timeout=timeout, args=args, extra_env=extra_env)
         except FrameworkRunnerError as e:
             log(f"Script {script_rel} failed: {e}", "error")

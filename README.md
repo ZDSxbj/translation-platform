@@ -1,6 +1,6 @@
 # His2Trans Translation Platform
 
-A full-stack web platform for automated C/C++ → Rust code translation, built upon the His2Trans translation framework.
+A full-stack web platform for automated C/C++ → Rust code translation, built upon the His2Trans research framework.
 
 ---
 
@@ -12,9 +12,9 @@ A full-stack web platform for automated C/C++ → Rust code translation, built u
 
 | Stage | Name | What It Does |
 |---|---|---|
-| Stage 1 | Dependency Analysis + Skeleton | Extracts C functions, resolves include dependencies, runs `bindgen` to generate Rust type definitions and skeleton stubs |
+| Stage 1 | Dependency Analysis + Skeleton | Extracts C functions via tree-sitter, resolves include dependencies via `clang -E` preprocessing, runs `bindgen` to generate Rust type definitions and skeleton stubs |
 | Stage 2 | Signature Matching + RAG | BM25 retrieval + Jina Reranker to match C functions against a knowledge base of previously translated Rust code |
-| Stage 3 | Function Body Translation + Repair | LLM-based function body translation, `cargo check` compile validation, auto-repair loop |
+| Stage 3 | Function Body Translation + Repair | Incremental LLM translation (function-by-function), `cargo check` compile validation, auto-repair loop, C2Rust deterministic fallback, compat.rs auto-fill — all integrated in `incremental_translate.py` |
 | Post-process | Reports & Packaging | Aggregates statistics, generates downloadable report and final Rust project archive |
 
 ### Technology Stack
@@ -23,11 +23,12 @@ A full-stack web platform for automated C/C++ → Rust code translation, built u
 |---|---|
 | **Frontend** | Vue 3 + Element Plus + Pinia + CodeMirror 6 |
 | **Backend** | Flask (Python) + REST API |
-| **Translation Engine** | His2Trans framework (Python) |
-| **LLM Backend** | OpenAI-compatible API (DeepSeek, etc.) |
+| **Translation Engine** | His2Trans framework (bundled in-tree, ~20K lines) |
+| **LLM Backend** | OpenAI-compatible API (Claude Opus 4.8, DeepSeek v3.2, Qwen3-Coder, etc.) |
 | **Code Parsing** | tree-sitter (C/C++, Rust grammars) |
 | **RAG Retrieval** | BM25 + Jina Reranker (optional, GPU) — KB shipped as .tar.gz, auto-extracted |
-| **Type Generation** | libclang + bindgen |
+| **Type Generation** | clang + bindgen |
+| **Fallback Transpiler** | C2Rust (optional, `cargo install c2rust`) |
 
 ---
 
@@ -37,24 +38,34 @@ A full-stack web platform for automated C/C++ → Rust code translation, built u
 
 - [x] ZIP upload and project analysis
 - [x] Full 4-stage pipeline orchestration with stage-by-stage gating
-- [x] LLM translation with API key configuration
-- [x] Auto-repair loop (compile-check → repair → re-check)
+- [x] LLM translation with API key configuration (OpenAI-compatible: Claude, DeepSeek, Qwen, GPT, etc.)
+- [x] Incremental translation with per-function compile verification and auto-repair
+- [x] C2Rust deterministic fallback for functions that fail all LLM repair attempts
+- [x] Compat.rs auto-fill via TU preprocessing (Step 2.55 extern declaration injection)
 - [x] RAG signature matching (BM25 retrieval + Jina Reranker)
 - [x] Intermediate file browsing per stage (skeleton .rs files, translated functions)
 - [x] Final merged project download
-- [x] Translation results report with statistics
+- [x] Translation results report with real statistics (compile pass/fail, repair count, C2Rust fallback count)
 - [x] OHOS (OpenHarmony) project support with `compile_commands.json` + bindgen
 - [x] Standard C project support (no `compile_commands.json` required)
 - [x] Workspace file tree viewer with CodeMirror code preview
 
+### Translation Quality (Tested: OHOS HDF "shared" module, 26 functions)
+
+| Model | One-Shot | After Repair | C2Rust Fallback | Total |
+|---|---|---|---|---|
+| Claude Opus 4.8 | 22 (85%) | 4 (15%) | 0 | **26/26 (100%)** |
+| DeepSeek v3.2 | 9 (35%) | 14 (54%) | 3 (11%) | **26/26 (100%)** |
+
+Final merged project compiles successfully (`cargo check` passes).
+
 ### Known Limitations
 
-- **Full project compilation**: Individual function compile-checks pass (26/26 on test OHOS project), but the merged final project may have residual compile errors from LLM-generated code (null byte literals, reserved keywords as identifiers, missing compat macros).
-- **Standard C translation quality**: Without `compile_commands.json` (or a `bear`-generated one), bindgen has limited type context, producing stub types. Translation quality improves significantly with a compile_commands.json.
-- **RAG BM25 search**: The BM25 retrieval step currently skips without results when the elastic_search directory is empty. Signature matching (C→Rust function signature mapping) works at 20/26 coverage.
-- **GPU requirement for Jina Reranker**: RAG reranking requires a CUDA-capable GPU with ≥4GB free VRAM. Falls back to CPU but significantly slower.
-- **No incremental/resume support**: If a stage fails, the entire stage must be re-run (partial progress within a stage is not preserved).
+- **Jina Reranker requires GPU**: RAG reranking needs a CUDA-capable GPU with ≥4GB free VRAM. Pre-computed reranked results are included in the repo as a fallback for the OHOS test projects.
+- **ohos_root_min is minimal**: The bundled OHOS header subset may miss definitions for some macros/functions. Add missing headers to `backend/data/ohos/ohos_root_min/` and rebuild the archive as needed.
+- **C2Rust optional**: The C2Rust fallback requires `cargo install c2rust` and `cmake`. Without it, functions that fail all LLM repair attempts will be left as `unimplemented!()` stubs (final project still compiles).
 - **Single-project sessions**: Each session handles one project. No batch translation.
+- **In-memory session storage**: Sessions are lost on server restart (no database persistence).
 
 ### Future Extensions
 
@@ -65,7 +76,6 @@ A full-stack web platform for automated C/C++ → Rust code translation, built u
 - [ ] User authentication and project history
 - [ ] Docker deployment with pre-configured GPU support
 - [ ] GitHub integration (translate directly from repo URL)
-- [ ] Plugin system for custom translation rules
 
 ---
 
@@ -73,33 +83,32 @@ A full-stack web platform for automated C/C++ → Rust code translation, built u
 
 ### Prerequisites
 
-- **Python 3.10+** with pip
-- **Node.js 18+** with npm
-- **Conda** (recommended for environment isolation)
-- **CUDA-capable GPU** (optional, for Jina Reranker RAG)
-- **His2Trans-Opt- framework** (sibling directory at `../His2Trans-Opt-/framework`) — the framework scripts only; RAG knowledge base and BM25 index are self-contained in this repo as .tar.gz archives
-- **Rust toolchain** (`rustc`, `cargo` — required for compile-check in Stage 3)
+| Tool | Required | Install |
+|---|---|---|
+| Python 3.10+ | Yes | system / conda |
+| Node.js 18+ | Yes | system |
+| Rust toolchain (nightly recommended) | Yes | `rustup toolchain install nightly` |
+| clang + libclang | Yes (preprocessing + bindgen) | `sudo apt install clang libclang-dev` |
+| cmake | Optional (C2Rust fallback) | `sudo apt install cmake` |
+| C2Rust | Optional (deterministic fallback) | `cargo install c2rust` |
+| CUDA GPU | Optional (Jina Reranker) | hardware |
+
+**Note**: The His2Trans framework is bundled in-tree at `backend/app/engines/his2trans/framework/` — no external framework repository is required. The `.env` placeholder path (`/absolute/path/to/...`) is automatically detected and falls back to the bundled copy.
 
 ### 1. Backend Setup
 
 ```bash
 cd backend
 
-# Create and activate conda environment
-conda create -n his2trans python=3.10 -y
-conda activate his2trans
-
 # Install Python dependencies
 pip install -r requirements.txt
 
-# Install tree-sitter language grammars (auto-compiled on first import)
-
-# Download NLTK data
+# Download NLTK data (one-time)
 python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
 
 # Configure environment
 cp .env.example .env
-# Edit .env — set API_KEY, API_BASE_URL, paths to His2Trans-Opt-
+# Edit .env — set API_KEY, API_BASE_URL, API_MODEL
 
 # Start backend (port 5000)
 FLASK_APP=run.py python -m flask run --host=0.0.0.0 --port=5000
@@ -127,13 +136,14 @@ Navigate to `http://localhost:8080`. Upload a C/C++ project ZIP, configure trans
 |---|---|---|
 | `API_KEY` | Yes | LLM API key (OpenAI-compatible) |
 | `API_BASE_URL` | Yes | LLM API base URL |
-| `API_MODEL` | No | Model name (default: `deepseek-v3.2`) |
-| `HIS2TRANS_FRAMEWORK` | Yes | Path to His2Trans-Opt-/framework |
-| `HIS2TRANS_DATA` | Yes | Path to His2Trans-Opt-/data (OHOS SDK, not RAG) |
+| `API_MODEL` | No | Model name (default: `claude-opus-4-8`) |
+| `API_MAX_TOKENS` | No | Max tokens per request (default: 8192) |
+| `API_TEMPERATURE` | No | Sampling temperature (default: 0.0) |
+| `API_TIMEOUT` | No | Request timeout in seconds (default: 600) |
+| `HIS2TRANS_FRAMEWORK` | No | Override bundled framework path (auto-detected if not set) |
 | `FLASK_ENV` | No | `development` or `production` |
-| `PORT` | No | Backend port (default: 5000) |
-
-See `backend/.env.example` for all available options.
+| `CORS_ORIGINS` | No | CORS allowed origins (default: `*`) |
+| `VLLM_MAX_RETRIES` | No | LLM request retries (default: 3) |
 
 ---
 
@@ -150,17 +160,28 @@ translation-platform/
 │   │   │   └── project.py        # GET /api/project/*
 │   │   ├── engines/
 │   │   │   └── his2trans/        # His2Trans engine implementation
-│   │   │       ├── engine.py     # Stage orchestrator
+│   │   │       ├── engine.py     # Stage orchestrator (~600 lines)
 │   │   │       ├── runner.py     # Subprocess script runner
 │   │   │       ├── env_mapper.py # Config → framework env var mapping
-│   │   │       └── framework/    # Trimmed framework fallback (2.8 MB)
+│   │   │       └── framework/    # Bundled framework (in-tree, ~20K lines)
+│   │   │           ├── stage1_prep/     # Dependency analysis + preprocessing
+│   │   │           ├── stage2_skeleton/ # bindgen types + skeleton builder
+│   │   │           ├── stage3_translate/# incremental_translate.py + C2Rust
+│   │   │           ├── knowledge/       # BM25 + Jina Reranker
+│   │   │           └── generate/        # LLM generation module
 │   │   ├── services/             # Business logic
-│   │   ├── socketio/             # Real-time progress events
-│   │   └── utils/                # Zip utilities
-│   ├── data/                     # Symlinked resources (gitignored)
-│   ├── tests/                    # Integration tests
+│   │   │   ├── pipeline_manager.py
+│   │   │   ├── path_service.py
+│   │   │   └── file_service.py
+│   │   └── utils/
+│   ├── data/
+│   │   ├── ohos/
+│   │   │   ├── ohos_root_min/      # Minimal OHOS header tree
+│   │   │   └── ohos_root_min.tar.gz # (auto-extracted on first use)
+│   │   └── rag/                    # Knowledge base + BM25 index
 │   ├── config.py                 # App configuration
 │   ├── run.py                    # Flask entry point
+│   ├── .env                      # Local configuration (gitignored)
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/

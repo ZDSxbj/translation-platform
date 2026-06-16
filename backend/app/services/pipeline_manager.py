@@ -278,25 +278,58 @@ class PipelineManager:
                 rs_count += sum(1 for f in files if f.endswith(".rs"))
             stats["final_rust_files"] = rs_count
 
-        # Compile results from test_results/
-        test_res_dir = os.path.join(ws, "test_results")
-        if os.path.isdir(test_res_dir):
-            passed = 0
-            failed = 0
-            for root, dirs, files in os.walk(test_res_dir):
-                for fn in files:
-                    if fn.endswith(".txt"):
-                        fpath = os.path.join(root, fn)
-                        try:
-                            with open(fpath, "r") as f:
-                                first_line = f.readline().strip()
-                            if first_line.startswith("Success"):
-                                passed += 1
-                            else:
-                                failed += 1
-                        except Exception:
-                            pass
-            stats["compile_passed"] = passed
-            stats["compile_failed"] = failed
+        # Compile results: prefer incremental mode's translation_stats.json
+        # over the legacy test_results/ directory (non-incremental mode).
+        inc_stats = None
+        inc_dir = os.path.join(ws, "incremental_work")
+        if os.path.isdir(inc_dir):
+            for item in os.listdir(inc_dir):
+                ts_json = os.path.join(inc_dir, item, f"translate_by_{stats.get('model', '')}",
+                                       "translation_stats.json")
+                if not os.path.isfile(ts_json):
+                    # Try with any model subdir
+                    proj_dir = os.path.join(inc_dir, item)
+                    if os.path.isdir(proj_dir):
+                        for model_dir in os.listdir(proj_dir):
+                            ts_json = os.path.join(proj_dir, model_dir, "translation_stats.json")
+                            if os.path.isfile(ts_json):
+                                break
+                if os.path.isfile(ts_json):
+                    try:
+                        import json
+                        with open(ts_json) as f:
+                            inc_stats = json.load(f)
+                    except Exception:
+                        pass
+                if inc_stats:
+                    break
+
+        if inc_stats:
+            stats["compile_passed"] = inc_stats.get("compiled", 0)
+            stats["compile_failed"] = inc_stats.get("failed", 0)
+            stats["translated_functions"] = inc_stats.get("translated", 0)
+            stats["repaired"] = inc_stats.get("repaired", 0)
+            stats["c2rust_fallback"] = inc_stats.get("c2rust_fallback", 0)
+        else:
+            # Fallback: legacy test_results directory
+            test_res_dir = os.path.join(ws, "test_results")
+            if os.path.isdir(test_res_dir):
+                passed = 0
+                failed = 0
+                for root, dirs, files in os.walk(test_res_dir):
+                    for fn in files:
+                        if fn.endswith(".txt"):
+                            fpath = os.path.join(root, fn)
+                            try:
+                                with open(fpath, "r") as f:
+                                    first_line = f.readline().strip()
+                                if first_line.startswith("Success"):
+                                    passed += 1
+                                else:
+                                    failed += 1
+                            except Exception:
+                                pass
+                stats["compile_passed"] = passed
+                stats["compile_failed"] = failed
 
         return stats

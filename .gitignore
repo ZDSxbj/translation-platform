@@ -60,3 +60,4 @@ Thumbs.db
 *.log
 *.bak
 tmp/
+backend/app/engines/his2trans/framework/.cache/

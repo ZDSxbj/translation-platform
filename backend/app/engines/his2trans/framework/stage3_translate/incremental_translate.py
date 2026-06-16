@@ -14,6 +14,7 @@ import os
 import sys
 import re
 import json
+import shlex
 import hashlib
 import shutil
 import subprocess
@@ -5144,6 +5145,13 @@ unsafe {
                         "-Wno-ignored-attributes",
                     ]
                 )
+                # Allow env-var injection of extra clang flags (e.g. for
+                # -include stubs to resolve OHOS macros in minimal ohos_root_min).
+                _extra_flags = os.environ.get(
+                    "C2R_BINDGEN_EXTERN_CLANG_FLAGS", ""
+                ).strip()
+                if _extra_flags:
+                    cmd.extend(shlex.split(_extra_flags))
 
                 try:
                     proc = subprocess.run(
@@ -5568,6 +5576,13 @@ unsafe {
                         "-Wno-ignored-attributes",
                     ]
                 )
+                # Allow env-var injection of extra clang flags (e.g. for
+                # -include stubs to resolve OHOS macros in minimal ohos_root_min).
+                _extra_flags = os.environ.get(
+                    "C2R_BINDGEN_EXTERN_CLANG_FLAGS", ""
+                ).strip()
+                if _extra_flags:
+                    cmd.extend(shlex.split(_extra_flags))
 
                 try:
                     proc = subprocess.run(
@@ -6144,6 +6159,32 @@ unsafe {
             except Exception:
                 pass
 
+    def _get_compile_commands_includes(self, file_group: str) -> List[str]:
+        """Extract -I include paths from the TU context map for *file_group*."""
+        incs: List[str] = []
+        try:
+            tc_files = getattr(self, "_tu_context_files", None) or {}
+            entry = tc_files.get(file_group)
+            if not entry:
+                return incs
+            ce = entry.get("compile_commands_entry") if isinstance(entry, dict) else None
+            if not isinstance(ce, dict):
+                return incs
+            cmd = (ce.get("command") or ce.get("arguments") or "")
+            if isinstance(cmd, list):
+                cmd = " ".join(str(p) for p in cmd)
+        except Exception:
+            return incs
+        if not cmd:
+            return incs
+
+        for part in str(cmd).split():
+            if part.startswith("-I"):
+                inc_path = part[2:]
+                if inc_path and os.path.isdir(inc_path):
+                    incs.append(os.path.abspath(inc_path))
+        return incs
+
     def _run_c2rust_transpile(self, *, preprocessed_i: Path, file_group: str) -> Optional[str]:
         """
         Run `c2rust transpile` on a pinned TU preprocessed `.i` (copied to `.c` to avoid `-x cpp-output` issues).
@@ -6163,11 +6204,27 @@ unsafe {
 
         tmp_c = tmp_dir / f"{preprocessed_i.stem}.c"
         tmp_rs = tmp_dir / f"{preprocessed_i.stem}.rs"
+
+        # Copy the preprocessed file, stripping known-problematic variadic
+        # calls (HiLogPrint) that trigger an assertion bug in c2rust v0.22.
         try:
-            shutil.copy(preprocessed_i, tmp_c)
-        except Exception as e:
-            logger.debug(f"c2rust fallback: 复制 .i 失败: {e}")
-            return None
+            raw = preprocessed_i.read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            raw = ""
+        if raw:
+            # Replace ((void)HiLogPrint(...)); → (void)0; (multiline-safe).
+            import re as _re
+            raw = _re.sub(
+                r'\(\(void\)HiLogPrint\([^)]*?(?:\([^)]*\)[^)]*?)*\)\)\s*;',
+                '(void)0;', raw, flags=_re.DOTALL
+            )
+            tmp_c.write_text(raw, encoding="utf-8")
+        else:
+            try:
+                shutil.copy(preprocessed_i, tmp_c)
+            except Exception as e:
+                logger.debug(f"c2rust fallback: 复制 .i 失败: {e}")
+                return None
 
         cmd = [
             c2rust_bin,
@@ -6179,6 +6236,13 @@ unsafe {
             "-Wno-builtin-macro-redefined",
             "-Wno-ignored-attributes",
         ]
+
+        # Pass include paths from the TU context so c2rust can resolve
+        # external declarations (e.g. HiLogPrint, HdfSbufWriteString).
+        _tu_incs = self._get_compile_commands_includes(file_group)
+        if _tu_incs:
+            for inc in _tu_incs:
+                cmd.extend(["-I", inc])
         try:
             proc = subprocess.run(
                 cmd,

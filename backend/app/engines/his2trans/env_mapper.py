@@ -49,6 +49,13 @@ class EnvMapper:
         """
         env = os.environ.copy()
 
+        # Ensure cargo-installed tools (c2rust, bindgen, etc.) are findable
+        # even when the server process launched without a full login PATH.
+        cargo_bin = os.path.expanduser("~/.cargo/bin")
+        existing_path = env.get("PATH", "")
+        if cargo_bin not in existing_path:
+            env["PATH"] = cargo_bin + os.pathsep + existing_path
+
         # 1. Essential paths
         # Resolve project name: prefer original_path.txt, fall back to env var,
         # then to source-path basename.
@@ -64,6 +71,15 @@ class EnvMapper:
         env["PROJECT_NAME"] = project_name
         env["WORKSPACE_PATH"] = workspace or ""
         env["C2R_WORKSPACE_ROOT"] = workspace or ""
+
+        # Enable TU preprocessing and configure output paths so that
+        # get_dependencies.py generates tu_context_map.json (with .i files)
+        # and incremental_translate.py can run Step 2.55 (extern decls→compat.rs).
+        cc_json = os.path.join(source_path, "compile_commands.json")
+        if os.path.isfile(cc_json):
+            env["COMPILE_COMMANDS_PATH"] = cc_json
+        env["USE_PREPROCESSING"] = "true"
+        env["PREPROCESS_OUTPUT_DIR"] = os.path.join(workspace or "", ".preprocessed")
 
         # 2. Fixed overrides (must come first — these fix framework defaults)
         for key, value in cls.FIXED_OVERRIDES.items():
