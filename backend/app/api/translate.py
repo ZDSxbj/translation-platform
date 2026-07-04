@@ -14,21 +14,28 @@ def start_translation():
     if not project_id:
         return jsonify({"code": 400, "message": "Missing 'project_id'"}), 400
 
+    engine = data.get("engine", "his2trans")
+
+    # Fields common to all engines
     config = {
-        "engine": data.get("engine", "his2trans"),
-        "model": data.get("model", current_app.config.get("API_MODEL", "deepseek-v3.2")),
-        "use_rag": data.get("use_rag", False),
-        "max_repair": int(data.get("max_repair", 5)),
-        "api_key": data.get("api_key", current_app.config.get("API_KEY", "")),
-        "api_base_url": data.get("api_base_url", current_app.config.get("API_BASE_URL", "")),
-        "api_max_tokens": int(data.get("api_max_tokens", current_app.config.get("API_MAX_TOKENS", 8192))),
-        "api_temperature": float(data.get("api_temperature", current_app.config.get("API_TEMPERATURE", 0.0))),
-        "his2trans_framework": current_app.config.get("HIS2TRANS_FRAMEWORK", ""),
-        "his2trans_data": current_app.config.get("HIS2TRANS_DATA", ""),
-        # Project-type-dependent fields
+        "engine": engine,
         "ohos_root": data.get("ohos_root", ""),
         "extra_includes": data.get("extra_includes", []),
     }
+
+    # His2Trans-specific fields — only include when relevant
+    if engine != "c2rust":
+        config.update({
+            "model": data.get("model", current_app.config.get("API_MODEL", "deepseek-v3.2")),
+            "use_rag": data.get("use_rag", False),
+            "max_repair": int(data.get("max_repair", 5)),
+            "api_key": data.get("api_key", current_app.config.get("API_KEY", "")),
+            "api_base_url": data.get("api_base_url", current_app.config.get("API_BASE_URL", "")),
+            "api_max_tokens": int(data.get("api_max_tokens", current_app.config.get("API_MAX_TOKENS", 8192))),
+            "api_temperature": float(data.get("api_temperature", current_app.config.get("API_TEMPERATURE", 0.0))),
+            "his2trans_framework": current_app.config.get("HIS2TRANS_FRAMEWORK", ""),
+            "his2trans_data": current_app.config.get("HIS2TRANS_DATA", ""),
+        })
 
     session_id = str(uuid.uuid4())
     pipeline = get_pipeline_manager()
@@ -40,12 +47,18 @@ def start_translation():
         output_folder=current_app.config["OUTPUT_FOLDER"],
     )
 
+    # Return the session's *actual* stages (engine-dependent), not a
+    # hardcoded list.  Different engines define different stage ids.
+    session_state = pipeline.get_session_state(session_id)
+    actual_stages = session_state["stages"] if session_state else pipeline.get_stages()
+
     return jsonify({
         "code": 200,
         "message": "Translation session created",
         "data": {
             "session_id": session_id,
-            "stages": pipeline.get_stages(),
+            "stages": [{"id": s["id"], "name": s["name"], "status": s["status"]}
+                       for s in actual_stages],
         }
     })
 

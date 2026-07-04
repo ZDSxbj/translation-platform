@@ -22,9 +22,9 @@
       <h3>Pipeline Summary</h3>
       <el-descriptions :column="3" border size="small">
         <el-descriptions-item label="Engine">{{ report.config?.engine || 'his2trans' }}</el-descriptions-item>
-        <el-descriptions-item label="Model">{{ report.config?.model || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="RAG">{{ report.config?.use_rag ? 'Enabled' : 'Disabled' }}</el-descriptions-item>
-        <el-descriptions-item label="Max Repair Rounds">{{ report.config?.max_repair || '-' }}</el-descriptions-item>
+        <el-descriptions-item v-if="!isC2Rust" label="Model">{{ report.config?.model || '-' }}</el-descriptions-item>
+        <el-descriptions-item v-if="!isC2Rust" label="RAG">{{ report.config?.use_rag ? 'Enabled' : 'Disabled' }}</el-descriptions-item>
+        <el-descriptions-item v-if="!isC2Rust" label="Max Repair Rounds">{{ report.config?.max_repair || '-' }}</el-descriptions-item>
         <el-descriptions-item label="OHOS Root">{{ report.config?.ohos_root || '(none)' }}</el-descriptions-item>
         <el-descriptions-item label="Generated At">{{ formatTime(report.generated_at) }}</el-descriptions-item>
       </el-descriptions>
@@ -60,7 +60,8 @@
     <!-- Pipeline Statistics -->
     <div v-if="hasStats" class="stats-section">
       <h3>Pipeline Statistics</h3>
-      <el-row :gutter="16">
+      <!-- His2Trans stats -->
+      <el-row v-if="!isC2Rust" :gutter="16">
         <el-col :span="6" v-if="report.extracted_functions != null">
           <el-statistic title="Extracted Functions" :value="report.extracted_functions" />
         </el-col>
@@ -82,6 +83,38 @@
         </el-col>
         <el-col :span="6" v-if="report.final_rust_files != null">
           <el-statistic title="Final Rust Files" :value="report.final_rust_files" />
+        </el-col>
+      </el-row>
+      <!-- C2Rust stats -->
+      <el-row v-else :gutter="16">
+        <el-col :span="6" v-if="c2rustStats.total_files != null">
+          <el-statistic title="Files Generated" :value="c2rustStats.total_files" />
+        </el-col>
+        <el-col :span="6" v-if="c2rustStats.total_lines != null">
+          <el-statistic title="Total Lines" :value="c2rustStats.total_lines" />
+        </el-col>
+        <el-col :span="6" v-if="c2rustStats.unsafe_blocks != null">
+          <el-statistic title="Unsafe Items" :value="c2rustStats.unsafe_blocks" />
+        </el-col>
+        <el-col :span="6" v-if="c2rustStats.unsafe_body_lines != null">
+          <el-statistic title="Unsafe Lines" :value="c2rustStats.unsafe_body_lines">
+            <template #suffix>
+              <span style="font-size:12px;color:#909399">/ {{ c2rustStats.total_lines }} total</span>
+            </template>
+          </el-statistic>
+        </el-col>
+        <el-col :span="6" v-if="c2rustStats.extern_c_functions != null">
+          <el-statistic title="extern C Functions" :value="c2rustStats.extern_c_functions" />
+        </el-col>
+        <el-col :span="6" v-if="c2rustStats.raw_ptr_types != null">
+          <el-statistic title="Raw Pointer Types" :value="c2rustStats.raw_ptr_types" />
+        </el-col>
+        <el-col :span="6" v-if="c2rustStats.compile_passed != null">
+          <el-statistic title="Compile Passed" :value="c2rustStats.compile_passed">
+            <template #suffix>
+              <span v-if="c2rustStats.compile_failed" class="stat-suffix-fail">/ {{ c2rustStats.compile_passed + c2rustStats.compile_failed }} total</span>
+            </template>
+          </el-statistic>
         </el-col>
       </el-row>
     </div>
@@ -138,16 +171,34 @@ const fileTree = ref([])
 const selectedFile = ref(null)
 const report = ref(null)
 
+const isC2Rust = computed(() => report.value?.config?.engine === 'c2rust')
+
+const c2rustStats = computed(() => {
+  if (!isC2Rust.value || !report.value?.stages) return {}
+  const pp = report.value.stages.find(s => s.id === 'stage2_postprocess')
+  return pp?.details || {}
+})
+
 const hasStats = computed(() => {
   if (!report.value) return false
+  if (isC2Rust.value) {
+    // C2Rust stats are in stage2_postprocess details
+    const pp = report.value.stages?.find(s => s.id === 'stage2_postprocess')
+    return pp?.details != null && Object.keys(pp.details).length > 0
+  }
   const keys = ['extracted_functions', 'skeleton_rust_files', 'signature_matches',
     'translated_functions', 'compile_passed', 'final_rust_files']
   return keys.some(k => report.value[k] != null)
 })
 
 onMounted(async () => {
-  if (store.sessionId !== props.sessionId) {
+  // Sync store to the current session (important for C2Rust vs His2Trans)
+  store.sessionId = props.sessionId
+  try {
     await store.refreshState()
+  } catch (e) {
+    // Session state might not be available (backend restarted), but we
+    // can still load the report and output tree.
   }
 
   // Load report from backend
@@ -158,9 +209,10 @@ onMounted(async () => {
     console.error('Failed to load report:', e)
   }
 
-  // Load output tree
+  // Load output tree — C2Rust stores output in transpiled/ not workspace/final_projects
   try {
-    const tree = await store.getOutputTree()
+    const subdir = isC2Rust.value ? 'transpiled' : ''
+    const tree = await store.getOutputTree(subdir)
     fileTree.value = tree
   } catch (e) {
     console.error('Failed to load output tree:', e)
@@ -181,6 +233,8 @@ function formatKey(key) {
 
 async function onFileSelected(node) {
   try {
+    // Tree API paths already include the subdir prefix (e.g.
+    // "transpiled/src/foo.rs"), so no extra prefix is needed.
     const data = await store.getOutputFileContent(node.path)
     selectedFile.value = data
   } catch (e) {

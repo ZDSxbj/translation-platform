@@ -43,6 +43,10 @@ onMounted(() => {
   if (props.isRunning) {
     expanded.value = true
     startPolling()
+  } else {
+    // Load logs for already-completed stages so they survive page
+    // navigation (e.g. View Results → Back to Pipeline).
+    refreshLogs()
   }
 })
 

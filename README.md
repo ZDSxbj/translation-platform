@@ -17,18 +17,31 @@ A full-stack web platform for automated C/C++ → Rust code translation, built u
 | Stage 3 | Function Body Translation + Repair | Incremental LLM translation (function-by-function), `cargo check` compile validation, auto-repair loop, C2Rust deterministic fallback, compat.rs auto-fill — all integrated in `incremental_translate.py` |
 | Post-process | Reports & Packaging | Aggregates statistics, generates downloadable report and final Rust project archive |
 
+### Dual-Engine Architecture
+
+The platform supports **two independent translation engines**, selectable from the frontend:
+
+| Engine | Type | Stages | Requires LLM | Output Quality |
+|---|---|---|---|---|
+| **His2Trans** | LLM-based pipeline | 4 (Prep → RAG → Translate → Post) | Yes | Safe, idiomatic, compilable Rust |
+| **C2Rust** | Mechanical transpiler | 2 (Transpile → Post-process) | No | Raw `unsafe` Rust, ~39% unsafe lines |
+
+**C2Rust** is a deterministic, mechanical C-to-Rust transpiler (`c2rust transpile`). It maps C AST nodes to Rust syntax one-to-one, producing code that compiles but is entirely `unsafe`, full of raw pointers and `extern "C"` bindings. It provides a fast, LLM-free baseline for comparison with His2Trans.
+
+C2Rust is also used internally by His2Trans as a **last-resort fallback**: when LLM translation and all repair attempts fail for a function, the framework invokes C2Rust to produce a compilable (though unsafe) function body.
+
 ### Technology Stack
 
 | Layer | Technology |
 |---|---|
 | **Frontend** | Vue 3 + Element Plus + Pinia + CodeMirror 6 |
 | **Backend** | Flask (Python) + REST API |
-| **Translation Engine** | His2Trans framework (bundled in-tree, ~20K lines) |
-| **LLM Backend** | OpenAI-compatible API (Claude Opus 4.8, DeepSeek v3.2, Qwen3-Coder, etc.) |
+| **Translation Engines** | His2Trans (LLM-based, 4 stages) + C2Rust (mechanical, 2 stages) |
+| **LLM Backend** | OpenAI-compatible API (Claude Opus 4.8, DeepSeek, Qwen3-Coder, etc.) — His2Trans only |
 | **Code Parsing** | tree-sitter (C/C++, Rust grammars) |
 | **RAG Retrieval** | BM25 + Jina Reranker (optional, GPU) — KB shipped as .tar.gz, auto-extracted |
 | **Type Generation** | clang + bindgen |
-| **Fallback Transpiler** | C2Rust (optional, `cargo install c2rust`) |
+| **Fallback Transpiler** | C2Rust (optional, `cargo install c2rust`) — used as His2Trans fallback AND standalone engine |
 
 ---
 
@@ -49,6 +62,7 @@ A full-stack web platform for automated C/C++ → Rust code translation, built u
 - [x] OHOS (OpenHarmony) project support with `compile_commands.json` + bindgen
 - [x] Standard C project support (no `compile_commands.json` required)
 - [x] Workspace file tree viewer with CodeMirror code preview
+- [x] Standalone C2Rust engine (2-stage mechanical transpilation with quality metrics)
 
 ### Translation Quality (Tested: OHOS HDF "shared" module, 26 functions)
 
@@ -90,7 +104,8 @@ Final merged project compiles successfully (`cargo check` passes).
 | Rust toolchain (nightly recommended) | Yes | `rustup toolchain install nightly` |
 | clang + libclang | Yes (preprocessing + bindgen) | `sudo apt install clang libclang-dev` |
 | cmake | Optional (C2Rust fallback) | `sudo apt install cmake` |
-| C2Rust | Optional (deterministic fallback) | `cargo install c2rust` |
+| C2Rust | Optional (standalone engine + His2Trans fallback) | `cargo install --locked c2rust` |
+| LLVM 17–18 | Required for C2Rust (runtime dep) | `brew install llvm@18` (macOS) / `apt install llvm-18` |
 | CUDA GPU | Optional (Jina Reranker) | hardware |
 
 **Note**: The His2Trans framework is bundled in-tree at `backend/app/engines/his2trans/framework/` — no external framework repository is required. The `.env` placeholder path (`/absolute/path/to/...`) is automatically detected and falls back to the bundled copy.
@@ -128,7 +143,9 @@ npm run dev
 
 ### 3. Open in Browser
 
-Navigate to `http://localhost:8080`. Upload a C/C++ project ZIP, configure translation parameters, and step through the pipeline stages.
+Navigate to `http://localhost:8080`. Upload a C/C++ project ZIP, select an engine (His2Trans or C2Rust), configure translation parameters, and step through the pipeline stages.
+
+**C2Rust mode**: Select "C2Rust (C → Rust)" from the engine dropdown. No API key or LLM configuration is required — the engine runs `c2rust transpile` via clang preprocessing, then post-processes the output for stable Rust compilation. Quality metrics (unsafe count, extern C count, raw pointer count, compile pass rate) are computed automatically.
 
 ### Environment Variables (`.env`)
 
@@ -159,16 +176,18 @@ translation-platform/
 │   │   │   ├── download.py       # GET /api/download/*
 │   │   │   └── project.py        # GET /api/project/*
 │   │   ├── engines/
-│   │   │   └── his2trans/        # His2Trans engine implementation
-│   │   │       ├── engine.py     # Stage orchestrator (~600 lines)
-│   │   │       ├── runner.py     # Subprocess script runner
-│   │   │       ├── env_mapper.py # Config → framework env var mapping
-│   │   │       └── framework/    # Bundled framework (in-tree, ~20K lines)
-│   │   │           ├── stage1_prep/     # Dependency analysis + preprocessing
-│   │   │           ├── stage2_skeleton/ # bindgen types + skeleton builder
-│   │   │           ├── stage3_translate/# incremental_translate.py + C2Rust
-│   │   │           ├── knowledge/       # BM25 + Jina Reranker
-│   │   │           └── generate/        # LLM generation module
+│   │   │   ├── his2trans/        # His2Trans engine implementation
+│   │   │   │   ├── engine.py     # Stage orchestrator (~600 lines)
+│   │   │   │   ├── runner.py     # Subprocess script runner
+│   │   │   │   ├── env_mapper.py # Config → framework env var mapping
+│   │   │   │   └── framework/    # Bundled framework (in-tree, ~20K lines)
+│   │   │   │       ├── stage1_prep/     # Dependency analysis + preprocessing
+│   │   │   │       ├── stage2_skeleton/ # bindgen types + skeleton builder
+│   │   │   │       ├── stage3_translate/# incremental_translate.py + C2Rust
+│   │   │   │       ├── knowledge/       # BM25 + Jina Reranker
+│   │   │   │       └── generate/        # LLM generation module
+│   │   │   └── c2rust/           # C2Rust standalone engine
+│   │   │       └── engine.py     # Transpile → Post-process → cargo check
 │   │   ├── services/             # Business logic
 │   │   │   ├── pipeline_manager.py
 │   │   │   ├── path_service.py

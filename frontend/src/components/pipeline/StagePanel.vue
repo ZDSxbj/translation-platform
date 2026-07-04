@@ -99,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 import { VideoPlay, FolderOpened, Folder, Document } from '@element-plus/icons-vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
 import StageLogViewer from '@/components/pipeline/StageLogViewer.vue'
@@ -115,10 +115,19 @@ const props = defineProps({
 
 defineEmits(['run'])
 
-const showFiles = ref(false)
+// For completed stages keep files visible even after page navigation
+const showFiles = ref(props.stage.status === 'completed')
 const fileTreeData = ref([])
 const selectedFile = ref(null)
 const loadedStageId = ref('')
+
+// Load file tree on mount if stage already completed (handles re-mount
+// after navigating to Result page and back).
+onMounted(async () => {
+  if (props.stage.status === 'completed') {
+    await loadFileTree()
+  }
+})
 
 // Watch for stage completion → auto-load file tree
 watch(() => props.stage.status, async (status) => {

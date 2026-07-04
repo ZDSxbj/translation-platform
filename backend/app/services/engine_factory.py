@@ -2,10 +2,12 @@
 
 from app.engines.base_engine import BaseEngine
 from app.engines.his2trans.engine import His2TransEngine
+from app.engines.c2rust.engine import C2RustEngine
 
 
 _engine_registry: dict[str, type[BaseEngine]] = {
     "his2trans": His2TransEngine,
+    "c2rust": C2RustEngine,
 }
 
 

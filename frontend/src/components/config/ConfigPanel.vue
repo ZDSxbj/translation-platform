@@ -5,16 +5,25 @@
       <el-form-item label="Translation Engine">
         <el-select v-model="localConfig.engine" style="width: 100%">
           <el-option label="His2Trans (C/C++ → Rust)" value="his2trans" />
+          <el-option label="C2Rust (C → Rust)" value="c2rust" />
         </el-select>
+        <div class="form-hint">
+          <template v-if="localConfig.engine === 'c2rust'">
+            Mechanical C-to-Rust transpiler — produces raw unsafe Rust with no semantic optimization. No LLM required.
+          </template>
+        </div>
       </el-form-item>
 
-      <!-- LLM Model -->
-      <el-form-item label="LLM Model">
-        <el-input v-model="localConfig.model" placeholder="e.g., deepseek-v3.2" />
-        <div class="form-hint">OpenAI-compatible model name. Examples: deepseek-v3.2, deepseek-coder, gpt-4o</div>
-      </el-form-item>
+      <!-- LLM/RAG/Repair config — only for His2Trans (hidden for C2Rust-only) -->
+      <template v-if="localConfig.engine !== 'c2rust'">
+        <!-- LLM Model -->
+        <el-form-item label="LLM Model">
+          <el-input v-model="localConfig.model" placeholder="e.g., deepseek-v3.2" />
+          <div class="form-hint">OpenAI-compatible model name. Examples: deepseek-v3.2, deepseek-coder, gpt-4o</div>
+        </el-form-item>
+      </template>
 
-      <!-- OpenHarmony Source Root (OHOS projects only) -->
+      <!-- OpenHarmony Source Root (OHOS projects only — both engines need this) -->
       <el-form-item
         v-if="projectType === 'ohos'"
         label="OpenHarmony Source Root"
@@ -26,10 +35,13 @@
         <div class="form-hint">
           Required for resolving OpenHarmony SDK headers (hdf_*, hilog, etc.).
           This should point to the root of the OpenHarmony source tree or <code>ohos_root_min/</code> folder.
+          <template v-if="localConfig.engine === 'c2rust'">
+            If left empty, the bundled ohos_root_min will be used automatically.
+          </template>
         </div>
       </el-form-item>
 
-      <!-- Additional Include Directories -->
+      <!-- Additional Include Directories (both engines) -->
       <el-form-item label="Additional Include Directories">
         <div class="includes-list">
           <div v-for="(inc, idx) in localConfig.extra_includes" :key="idx" class="include-row">
@@ -57,46 +69,49 @@
         <div class="form-hint">Additional directories to search for header files during compilation</div>
       </el-form-item>
 
-      <!-- RAG Toggle -->
-      <el-form-item label="RAG (Retrieval-Augmented Generation)">
-        <el-switch v-model="localConfig.use_rag" active-text="On" inactive-text="Off" />
-        <div class="form-hint">Enable BM25 + Jina Reranker for signature matching with knowledge base</div>
-      </el-form-item>
+      <!-- His2Trans-only fields -->
+      <template v-if="localConfig.engine !== 'c2rust'">
+        <!-- RAG Toggle -->
+        <el-form-item label="RAG (Retrieval-Augmented Generation)">
+          <el-switch v-model="localConfig.use_rag" active-text="On" inactive-text="Off" />
+          <div class="form-hint">Enable BM25 + Jina Reranker for signature matching with knowledge base</div>
+        </el-form-item>
 
-      <!-- Max Repair Rounds -->
-      <el-form-item label="Max Repair Rounds">
-        <el-input-number
-          v-model="localConfig.max_repair"
-          :min="0"
-          :max="10"
-          :step="1"
-          style="width: 100%"
-        />
-        <div class="form-hint">Maximum compile-and-repair iterations per function (0 = no repair)</div>
-      </el-form-item>
+        <!-- Max Repair Rounds -->
+        <el-form-item label="Max Repair Rounds">
+          <el-input-number
+            v-model="localConfig.max_repair"
+            :min="0"
+            :max="10"
+            :step="1"
+            style="width: 100%"
+          />
+          <div class="form-hint">Maximum compile-and-repair iterations per function (0 = no repair)</div>
+        </el-form-item>
 
-      <!-- Advanced Settings -->
-      <el-collapse>
-        <el-collapse-item title="Advanced Settings" name="advanced">
-          <el-form-item label="API Base URL">
-            <el-input v-model="localConfig.api_base_url" placeholder="https://api.apiyi.com/v1" />
-          </el-form-item>
-          <el-form-item label="Max Tokens">
-            <el-input-number v-model="localConfig.api_max_tokens" :min="256" :max="65536" :step="256" style="width: 100%" />
-          </el-form-item>
-          <el-form-item label="Temperature">
-            <el-slider v-model="localConfig.api_temperature" :min="0" :max="2" :step="0.1" show-input />
-          </el-form-item>
-          <el-form-item label="API Key">
-            <el-input
-              v-model="localConfig.api_key"
-              placeholder="Use env default if empty"
-              type="password"
-              show-password
-            />
-          </el-form-item>
-        </el-collapse-item>
-      </el-collapse>
+        <!-- Advanced Settings -->
+        <el-collapse>
+          <el-collapse-item title="Advanced Settings" name="advanced">
+            <el-form-item label="API Base URL">
+              <el-input v-model="localConfig.api_base_url" placeholder="https://api.apiyi.com/v1" />
+            </el-form-item>
+            <el-form-item label="Max Tokens">
+              <el-input-number v-model="localConfig.api_max_tokens" :min="256" :max="65536" :step="256" style="width: 100%" />
+            </el-form-item>
+            <el-form-item label="Temperature">
+              <el-slider v-model="localConfig.api_temperature" :min="0" :max="2" :step="0.1" show-input />
+            </el-form-item>
+            <el-form-item label="API Key">
+              <el-input
+                v-model="localConfig.api_key"
+                placeholder="Use env default if empty"
+                type="password"
+                show-password
+              />
+            </el-form-item>
+          </el-collapse-item>
+        </el-collapse>
+      </template>
     </el-form>
   </div>
 </template>

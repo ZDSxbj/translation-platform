@@ -83,12 +83,15 @@ const router = useRouter()
 const store = useTranslationStore()
 
 onMounted(async () => {
+  // On page refresh the store is empty — sync sessionId from the URL
+  // first, then reload state from the backend.
   if (store.sessionId !== props.sessionId) {
-    try {
-      await store.refreshState()
-    } catch (e) {
-      // Session state may need re-initialization via HomePage
-    }
+    store.sessionId = props.sessionId
+  }
+  try {
+    await store.refreshState()
+  } catch (e) {
+    // Session may have expired (backend restart, TTL, etc.)
   }
 })
 
@@ -142,6 +145,8 @@ function getWorkspaceSubdir(stageId) {
     stage2_rag: 'source_skeletons',
     stage3_translate: '',
     postprocess: '',
+    stage1_transpile: 'transpiled_raw',
+    stage2_postprocess: 'transpiled',
   }
   return defaults[stageId] || ''
 }
