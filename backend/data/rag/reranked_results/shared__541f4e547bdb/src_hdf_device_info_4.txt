@@ -1,0 +1,552 @@
+C_Code: 
+int32_t UnloadAllIdleSystemAbility() override;
+
+    /**
+     * UnloadProcess, unload process by process name list.
+     * only support for memmgrservice
+     *
+     * @return ERR_OK It means unload all process in list.
+     */
+    virtual int32_t UnloadProcess(const std::vector<std::u16string>& processList) override;
+
+    /**
+     * GetSystemProcessInfo, Get process info by said.
+     * only support for memmgrservice
+     *
+     * @param processList, Issue a parameter and return it as a result.
+     * @return ERR_OK indicates that the get successfully.
+     */
+    virtual int32_t GetLruIdleSystemAbilityProc(std::vector<IdleProcessInfo>& processInfos) override;
+
+    /**
+     * GetSystemProcessInfo, Get process info by said.
+     *
+     * @param systemAbilityId, Need the said of sa which wants to get process info.
+     * @param systemProcessInfo, Issue a parameter and return it as a result.
+     * @return ERR_OK indicates that the get successfully.
+     */
+    int32_t GetSystemProcessInfo(int32_t systemAbilityId, SystemProcessInfo& systemProcessInfo) override;
+
+    /**
+     * GetRunningSystemProcess, Get all processes currently running.
+     *
+     * @param systemProcessInfos, Issue a parameter and return it as a result.
+     * @return ERR_OK indicates that the get successfully.
+     */
+    int32_t GetRunningSystemProcess(std::list<SystemProcessInfo>& systemProcessInfos) override;
+
+    /**
+     * SubscribeSystemProcess, Subscribe the status of process.
+     *
+     * @param listener, callback.
+     * @return ERR_OK indicates that the Subscribe successfully.
+     */
+    int32_t SubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener) override;
+
+    /**
+     * SendStrategy, Send strategy to SA.
+     *
+     * @param type, type is a certain device status type.
+     * @param systemAbilityIds, Need the vector of said which wants to send strategy.
+     * @param level, level is level of a certain device status type.
+     * @param action, action is scheduling strategy.
+     * @return ERR_OK indicates that the Subscribe successfully.
+     */
+    int32_t SendStrategy(int32_t type, std::vector<int32_t>& systemAbilityIds,
+        int32_t level, std::string& action) override;
+
+    /**
+     * UnSubscribeSystemProcess, UnSubscribe the status of process.
+     *
+     * @param listener, callback.
+     * @return ERR_OK indicates that the UnSubscribe successfully.
+     */
+    int32_t UnSubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener) override;
+
+    /**
+     * GetExtensionSaIds, Return list of saId that match extension.
+     *
+     * @param extension, extension, match with profile extension.
+     * @param saIds, list of saId that match extension
+     * @return ERR_OK indicates that the list of saId that match extension success.
+     */
+    int32_t GetExtensionSaIds(const std::string& extension, std::vector<int32_t> &saIds) override;
+
+    /**
+     * GetExtensionRunningSaList, Return started list of hanlde that match extension.
+     *
+     * @param extension, extension, match with profile extension.
+     * @param saList, started list of remote obj that match extension
+     * @return ERR_OK indicates that the list of hanlde that match extension success.
+     */
+    int32_t GetExtensionRunningSaList(const std::string& extension, std::vector<sptr<IRemoteObject>>& saList) override;
+
+    /**
+     * GetLocalAbilityManagerProxy, Return local ability manager proxy.
+     *
+     * @param systemAbilityId, need to obtain the said of sa.
+     * @return nullptr indicates acquistion failure.
+     */
+    sptr<IRemoteObject> GetLocalAbilityManagerProxy(int32_t systemAbilityId) override;
+
+    int32_t GetRunningSaExtensionInfoList(const std::string& extension,
+        std::vector<SaExtensionInfo>& infoList) override;
+    int32_t GetCommonEventExtraDataIdlist(int32_t saId, std::vector<int64_t>& extraDataIdList,
+        const std::string& eventName = "") override;
+    int32_t GetOnDemandReasonExtraData(int64_t extraDataId, MessageParcel& extraDataParcel) override;
+    int32_t GetOnDemandPolicy(int32_t systemAbilityId, OnDemandPolicyType type,
+        std::vector<SystemAbilityOnDemandEvent>& abilityOnDemandEvents) override;
+    int32_t UpdateOnDemandPolicy(int32_t systemAbilityId, OnDemandPolicyType type,
+        const std::vector<SystemAbilityOnDemandEvent>& sabilityOnDemandEvents) override;
+    sptr<IRemoteObject> Recompute(int32_t systemAbilityId, int32_t code) override;
+    int32_t GetOnDemandSystemAbilityIds(std::vector<int32_t>& systemAbilityIds) override;
+private:
+    sptr<IRemoteObject> GetSystemAbilityWrapper(int32_t systemAbilityId, const std::string& deviceId = "");
+    sptr<IRemoteObject> CheckSystemAbilityWrapper(int32_t code, MessageParcel& data);
+    sptr<IRemoteObject> CheckSystemAbilityWrapper(int32_t code, MessageParcel& data, int32_t& errCode);
+    sptr<IRemoteObject> CheckSystemAbility(int32_t systemAbilityId, const std::string& deviceId, int32_t& errCode);
+    sptr<IRemoteObject> CheckSystemAbility(int32_t systemAbilityId, bool& isExist, int32_t& errCode);
+    int32_t MarshalSAExtraProp(const SAExtraProp& extraProp, MessageParcel& data) const;
+    int32_t AddSystemAbilityWrapper(int32_t code, MessageParcel& data);
+    int32_t RemoveSystemAbilityWrapper(int32_t code, MessageParcel& data);
+    int32_t ReadSystemProcessFromParcel(MessageParcel& reply, std::list<SystemProcessInfo>& systemProcessInfos);
+    int32_t ReadProcessInfoFromParcel(MessageParcel& reply, SystemProcessInfo& systemProcessInfo);
+    int32_t ReadIdleProcessInfoFromParcel(MessageParcel& reply, std::vector<IdleProcessInfo>& procInfos);
+    sptr<IRemoteObject> CheckSystemAbilityTransaction(int32_t systemAbilityId);
+    bool IsOnDemandSystemAbility(int32_t systemAbilityId);
+    int32_t ListExtensionSendReq(const std::string& extension,
+        SamgrInterfaceCode cmd, MessageParcel& reply, MessageOption& option);
+private:
+    static inline BrokerDelegator<SystemAbilityManagerProxy> delegator_;
+    std::set<int32_t> onDemandSystemAbilityIdsSet_;
+    std::mutex onDemandSaLock_;
+};
+
+class SystemAbilityProxyCallback : public SystemAbilityLoadCallbackStub {
+public:
+    void OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
+        const sptr<IRemoteObject> &remoteObject) override;
+    void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
+    std::mutex callbackLock_;
+    std::condition_variable cv_;
+    sptr<IRemoteObject> loadproxy_;
+}
+Function: 
+pub fn unload_all_idle_system_ability(&self) -> i32 {
+        info!("unload all idle system ability");
+        UnloadAllIdleSystemAbility()
+    }
+Unixcoder Score: 0.06313391774892807
+--------------------------------------------------
+C_Code: 
+DeviceFaultInfoEXT( DeviceFaultInfoEXT const & )             = delete;
+Function: 
+fn from(src: &vello_encoding::BufferSizes) -> Self {
+        Self {
+            path_reduced: src.path_reduced.size_in_bytes(),
+            path_reduced2: src.path_reduced2.size_in_bytes(),
+            path_reduced_scan: src.path_reduced_scan.size_in_bytes(),
+            path_monoids: src.path_monoids.size_in_bytes(),
+            path_bboxes: src.path_bboxes.size_in_bytes(),
+            draw_reduced: src.draw_reduced.size_in_bytes(),
+            draw_monoids: src.draw_monoids.size_in_bytes(),
+            info: src.info.size_in_bytes(),
+            clip_inps: src.clip_inps.size_in_bytes(),
+            clip_els: src.clip_els.size_in_bytes(),
+            clip_bics: src.clip_bics.size_in_bytes(),
+            clip_bboxes: src.clip_bboxes.size_in_bytes(),
+            draw_bboxes: src.draw_bboxes.size_in_bytes(),
+            bump_alloc: src.bump_alloc.size_in_bytes(),
+            indirect_count: src.indirect_count.size_in_bytes(),
+            bin_headers: src.bin_headers.size_in_bytes(),
+            paths: src.paths.size_in_bytes(),
+            lines: src.lines.size_in_bytes(),
+            bin_data: src.bin_data.size_in_bytes(),
+            tiles: src.tiles.size_in_bytes(),
+            seg_counts: src.seg_counts.size_in_bytes(),
+            segments: src.segments.size_in_bytes(),
+            ptcl: src.ptcl.size_in_bytes(),
+        }
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__uv_create_thread__idx76441_rank3.c", "source_rust_file": "API_Mapping__uv_create_thread__idx76441_rank3.rs", "c_api": "malloc(sizeof *info)", "rust_api": "Box::new(...)", "mapping_type": "pattern", "description": "Heap allocation for thread info structure", "reasoning": "[Task Analysis] C function creates a thread using Windows API (_beginthreadex) and malloc/free for memory management; Rust code uses task::spawn and string allocation. [Similarity] Names don't refer to the same concept (uv_create_thread vs task::spawn), and domains are different (low-level threading vs high-level task spawning). [Knowledge Extraction] No full or partial match due to domain mismatch and different semantic scopes. However, there are API mappings between thread creation patterns and memory allocation patterns."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__uv_create_thread__idx76441_rank3.c", "source_rust_file": "API_Mapping__uv_create_thread__idx76441_rank3.rs", "c_api": "free(info)", "rust_api": "drop(...)", "mapping_type": "pattern", "description": "Memory deallocation for thread info structure", "reasoning": "[Task Analysis] C function creates a thread using Windows API (_beginthreadex) and malloc/free for memory management; Rust code uses task::spawn and string allocation. [Similarity] Names don't refer to the same concept (uv_create_thread vs task::spawn), and domains are different (low-level threading vs high-level task spawning). [Knowledge Extraction] No full or partial match due to domain mismatch and different semantic scopes. However, there are API mappings between thread creation patterns and memory allocation patterns."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__uv_create_thread__idx76441_rank3.c", "source_rust_file": "API_Mapping__uv_create_thread__idx76441_rank3.rs", "c_api": "_beginthreadex(...)", "rust_api": "task::spawn(...)", "mapping_type": "function", "description": "Thread creation and execution", "reasoning": "[Task Analysis] C function creates a thread using Windows API (_beginthreadex) and malloc/free for memory management; Rust code uses task::spawn and string allocation. [Similarity] Names don't refer to the same concept (uv_create_thread vs task::spawn), and domains are different (low-level threading vs high-level task spawning). [Knowledge Extraction] No full or partial match due to domain mismatch and different semantic scopes. However, there are API mappings between thread creation patterns and memory allocation patterns."}]
+Unixcoder Score: 0.011451114900410175
+--------------------------------------------------
+C_Code: 
+static unsigned __stdcall create_thread_helper(void* info) {
+  /* Copy thread info locally, then free it */
+  void (*entry)(void* arg) = ((thread_info_t*) info)->entry;
+  void* arg = ((thread_info_t*) info)->arg;
+
+  free(info);
+
+  /* Run the actual thread proc */
+  entry(arg);
+
+  /* Finalize */
+  _endthreadex(0);
+  return 0;
+}
+Function: 
+fn main() {
+    let h = thread::spawn(|| {
+        process::exit(0);
+    });
+    let _ = h.join();
+}
+Unixcoder Score: 0.0033022107090801
+--------------------------------------------------
+C_Code: 
+static unsigned __stdcall create_thread_helper(void* info) {
+  /* Copy thread info locally, then free it */
+  void (*entry)(void* arg) = ((thread_info_t*) info)->entry;
+  void* arg = ((thread_info_t*) info)->arg;
+
+  free(info);
+
+  /* Run the actual thread proc */
+  entry(arg);
+
+  /* Finalize */
+  _endthreadex(0);
+  return 0;
+}
+Function: 
+fn with<R, F>(f: F) -> Option<R>
+    where
+        F: FnOnce(&mut ThreadInfo) -> R,
+    {
+        THREAD_INFO
+            .try_with(move |thread_info| {
+                let mut thread_info = thread_info.borrow_mut();
+                let thread_info = thread_info.get_or_insert_with(|| ThreadInfo {
+                    stack_guard: None,
+                    thread: Thread::new(None),
+                });
+                f(thread_info)
+            })
+            .ok()
+    }
+Unixcoder Score: -0.007536609191447496
+--------------------------------------------------
+C_Code: 
+static unsigned __stdcall create_thread_helper(void* info) {
+  /* Copy thread info locally, then free it */
+  void (*entry)(void* arg) = ((thread_info_t*) info)->entry;
+  void* arg = ((thread_info_t*) info)->arg;
+
+  free(info);
+
+  /* Run the actual thread proc */
+  entry(arg);
+
+  /* Finalize */
+  _endthreadex(0);
+  return 0;
+}
+Function: 
+pub unsafe fn new(stack: usize, p: Box<dyn FnOnce()>) -> io::Result<Thread> {
+        let p = Box::into_raw(Box::new(p));
+
+        // FIXME On UNIX, we guard against stack sizes that are too small but
+        // that's because pthreads enforces that stacks are at least
+        // PTHREAD_STACK_MIN bytes big. Windows has no such lower limit, it's
+        // just that below a certain threshold you can't do anything useful.
+        // That threshold is application and architecture-specific, however.
+        let ret = c::CreateThread(
+            ptr::null_mut(),
+            stack,
+            Some(thread_start),
+            p as *mut _,
+            c::STACK_SIZE_PARAM_IS_A_RESERVATION,
+            ptr::null_mut(),
+        );
+        let ret = HandleOrNull::from_raw_handle(ret);
+        return if let Ok(handle) = ret.try_into() {
+            Ok(Thread { handle: Handle::from_inner(handle) })
+        } else {
+            // The thread failed to start and as a result p was not consumed. Therefore, it is
+            // safe to reconstruct the box so that it gets deallocated.
+            drop(Box::from_raw(p));
+            Err(io::Error::last_os_error())
+        };
+
+        extern "system" fn thread_start(main: *mut c_void) -> c::DWORD {
+            unsafe {
+                // Next, set up our stack overflow handler which may get triggered if we run
+                // out of stack.
+                let _handler = stack_overflow::Handler::new();
+                // Finally, let's run some code.
+                Box::from_raw(main as *mut Box<dyn FnOnce()>)();
+            }
+            0
+        }
+    }
+Unixcoder Score: -0.009743214584887028
+--------------------------------------------------
+C_Code: 
+int32_t UnloadAllIdleSystemAbility() override;
+
+    /**
+     * UnloadProcess, unload process by process name list.
+     * only support for memmgrservice
+     *
+     * @return ERR_OK It means unload all process in list.
+     */
+    virtual int32_t UnloadProcess(const std::vector<std::u16string>& processList) override;
+
+    /**
+     * GetSystemProcessInfo, Get process info by said.
+     * only support for memmgrservice
+     *
+     * @param processList, Issue a parameter and return it as a result.
+     * @return ERR_OK indicates that the get successfully.
+     */
+    virtual int32_t GetLruIdleSystemAbilityProc(std::vector<IdleProcessInfo>& processInfos) override;
+
+    /**
+     * GetSystemProcessInfo, Get process info by said.
+     *
+     * @param systemAbilityId, Need the said of sa which wants to get process info.
+     * @param systemProcessInfo, Issue a parameter and return it as a result.
+     * @return ERR_OK indicates that the get successfully.
+     */
+    int32_t GetSystemProcessInfo(int32_t systemAbilityId, SystemProcessInfo& systemProcessInfo) override;
+
+    /**
+     * GetRunningSystemProcess, Get all processes currently running.
+     *
+     * @param systemProcessInfos, Issue a parameter and return it as a result.
+     * @return ERR_OK indicates that the get successfully.
+     */
+    int32_t GetRunningSystemProcess(std::list<SystemProcessInfo>& systemProcessInfos) override;
+
+    /**
+     * SubscribeSystemProcess, Subscribe the status of process.
+     *
+     * @param listener, callback.
+     * @return ERR_OK indicates that the Subscribe successfully.
+     */
+    int32_t SubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener) override;
+
+    /**
+     * SendStrategy, Send strategy to SA.
+     *
+     * @param type, type is a certain device status type.
+     * @param systemAbilityIds, Need the vector of said which wants to send strategy.
+     * @param level, level is level of a certain device status type.
+     * @param action, action is scheduling strategy.
+     * @return ERR_OK indicates that the Subscribe successfully.
+     */
+    int32_t SendStrategy(int32_t type, std::vector<int32_t>& systemAbilityIds,
+        int32_t level, std::string& action) override;
+
+    /**
+     * UnSubscribeSystemProcess, UnSubscribe the status of process.
+     *
+     * @param listener, callback.
+     * @return ERR_OK indicates that the UnSubscribe successfully.
+     */
+    int32_t UnSubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener) override;
+
+    /**
+     * GetExtensionSaIds, Return list of saId that match extension.
+     *
+     * @param extension, extension, match with profile extension.
+     * @param saIds, list of saId that match extension
+     * @return ERR_OK indicates that the list of saId that match extension success.
+     */
+    int32_t GetExtensionSaIds(const std::string& extension, std::vector<int32_t> &saIds) override;
+
+    /**
+     * GetExtensionRunningSaList, Return started list of hanlde that match extension.
+     *
+     * @param extension, extension, match with profile extension.
+     * @param saList, started list of remote obj that match extension
+     * @return ERR_OK indicates that the list of hanlde that match extension success.
+     */
+    int32_t GetExtensionRunningSaList(const std::string& extension, std::vector<sptr<IRemoteObject>>& saList) override;
+
+    /**
+     * GetLocalAbilityManagerProxy, Return local ability manager proxy.
+     *
+     * @param systemAbilityId, need to obtain the said of sa.
+     * @return nullptr indicates acquistion failure.
+     */
+    sptr<IRemoteObject> GetLocalAbilityManagerProxy(int32_t systemAbilityId) override;
+
+    int32_t GetRunningSaExtensionInfoList(const std::string& extension,
+        std::vector<SaExtensionInfo>& infoList) override;
+    int32_t GetCommonEventExtraDataIdlist(int32_t saId, std::vector<int64_t>& extraDataIdList,
+        const std::string& eventName = "") override;
+    int32_t GetOnDemandReasonExtraData(int64_t extraDataId, MessageParcel& extraDataParcel) override;
+    int32_t GetOnDemandPolicy(int32_t systemAbilityId, OnDemandPolicyType type,
+        std::vector<SystemAbilityOnDemandEvent>& abilityOnDemandEvents) override;
+    int32_t UpdateOnDemandPolicy(int32_t systemAbilityId, OnDemandPolicyType type,
+        const std::vector<SystemAbilityOnDemandEvent>& sabilityOnDemandEvents) override;
+    sptr<IRemoteObject> Recompute(int32_t systemAbilityId, int32_t code) override;
+    int32_t GetOnDemandSystemAbilityIds(std::vector<int32_t>& systemAbilityIds) override;
+private:
+    sptr<IRemoteObject> GetSystemAbilityWrapper(int32_t systemAbilityId, const std::string& deviceId = "");
+    sptr<IRemoteObject> CheckSystemAbilityWrapper(int32_t code, MessageParcel& data);
+    sptr<IRemoteObject> CheckSystemAbilityWrapper(int32_t code, MessageParcel& data, int32_t& errCode);
+    sptr<IRemoteObject> CheckSystemAbility(int32_t systemAbilityId, const std::string& deviceId, int32_t& errCode);
+    sptr<IRemoteObject> CheckSystemAbility(int32_t systemAbilityId, bool& isExist, int32_t& errCode);
+    int32_t MarshalSAExtraProp(const SAExtraProp& extraProp, MessageParcel& data) const;
+    int32_t AddSystemAbilityWrapper(int32_t code, MessageParcel& data);
+    int32_t RemoveSystemAbilityWrapper(int32_t code, MessageParcel& data);
+    int32_t ReadSystemProcessFromParcel(MessageParcel& reply, std::list<SystemProcessInfo>& systemProcessInfos);
+    int32_t ReadProcessInfoFromParcel(MessageParcel& reply, SystemProcessInfo& systemProcessInfo);
+    int32_t ReadIdleProcessInfoFromParcel(MessageParcel& reply, std::vector<IdleProcessInfo>& procInfos);
+    sptr<IRemoteObject> CheckSystemAbilityTransaction(int32_t systemAbilityId);
+    bool IsOnDemandSystemAbility(int32_t systemAbilityId);
+    int32_t ListExtensionSendReq(const std::string& extension,
+        SamgrInterfaceCode cmd, MessageParcel& reply, MessageOption& option);
+private:
+    static inline BrokerDelegator<SystemAbilityManagerProxy> delegator_;
+    std::set<int32_t> onDemandSystemAbilityIdsSet_;
+    std::mutex onDemandSaLock_;
+};
+
+class SystemAbilityProxyCallback : public SystemAbilityLoadCallbackStub {
+public:
+    void OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
+        const sptr<IRemoteObject> &remoteObject) override;
+    void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
+    std::mutex callbackLock_;
+    std::condition_variable cv_;
+    sptr<IRemoteObject> loadproxy_;
+}
+Function: 
+pub fn unload_all_idle_system_ability(&self) -> i32 {
+        info!("unload all idle system ability");
+        UnloadAllIdleSystemAbility()
+    }
+Unixcoder Score: -0.014549742452800274
+--------------------------------------------------
+C_Code: 
+static unsigned __stdcall create_thread_helper(void* info) {
+  /* Copy thread info locally, then free it */
+  void (*entry)(void* arg) = ((thread_info_t*) info)->entry;
+  void* arg = ((thread_info_t*) info)->arg;
+
+  free(info);
+
+  /* Run the actual thread proc */
+  entry(arg);
+
+  /* Finalize */
+  _endthreadex(0);
+  return 0;
+}
+Function: 
+fn main() {
+    let h = thread::spawn(|| {
+        process::exit(0);
+    });
+    let _ = h.join();
+}
+Unixcoder Score: -0.016728388145565987
+--------------------------------------------------
+C_Code: 
+struct VkBufferCopy {
+    VkDeviceSize    srcOffset;
+    VkDeviceSize    dstOffset;
+    VkDeviceSize    size;
+}
+Function: 
+struct BufferSizes {
+        // Known size buffers
+        path_reduced: u32,
+        path_reduced2: u32,
+        path_reduced_scan: u32,
+        path_monoids: u32,
+        path_bboxes: u32,
+        draw_reduced: u32,
+        draw_monoids: u32,
+        info: u32,
+        clip_inps: u32,
+        clip_els: u32,
+        clip_bics: u32,
+        clip_bboxes: u32,
+        draw_bboxes: u32,
+        bump_alloc: u32,
+        indirect_count: u32,
+        bin_headers: u32,
+        paths: u32,
+        // Bump allocated buffers
+        lines: u32,
+        bin_data: u32,
+        tiles: u32,
+        seg_counts: u32,
+        segments: u32,
+        ptcl: u32,
+    }
+Unixcoder Score: -0.0177315603941679
+--------------------------------------------------
+C_Code: 
+struct DeviceFaultInfoEXT
+Function: 
+struct DispatchInfo {
+        use_large_path_scan: bool,
+
+        // Dispatch workgroup counts for each pipeline
+        path_reduce: WorkgroupSize,
+        path_reduce2: WorkgroupSize,
+        path_scan1: WorkgroupSize,
+        path_scan: WorkgroupSize,
+        bbox_clear: WorkgroupSize,
+        flatten: WorkgroupSize,
+        draw_reduce: WorkgroupSize,
+        draw_leaf: WorkgroupSize,
+        clip_reduce: WorkgroupSize,
+        clip_leaf: WorkgroupSize,
+        binning: WorkgroupSize,
+        tile_alloc: WorkgroupSize,
+        path_count_setup: WorkgroupSize,
+        // Note: `path_count` must use an indirect dispatch
+        backdrop: WorkgroupSize,
+        coarse: WorkgroupSize,
+        path_tiling_setup: WorkgroupSize,
+        // Note: `path_tiling` must use an indirect dispatch
+        fine: WorkgroupSize,
+    }
+Unixcoder Score: -0.035551708191633224
+--------------------------------------------------
+C_Code: 
+struct VkPhysicalDeviceMemoryBudgetPropertiesEXT {
+    VkStructureType    sType;
+    void*              pNext;
+    VkDeviceSize       heapBudget[VK_MAX_MEMORY_HEAPS];
+    VkDeviceSize       heapUsage[VK_MAX_MEMORY_HEAPS];
+}
+Function: 
+struct BufferSizes {
+        // Known size buffers
+        path_reduced: u32,
+        path_reduced2: u32,
+        path_reduced_scan: u32,
+        path_monoids: u32,
+        path_bboxes: u32,
+        draw_reduced: u32,
+        draw_monoids: u32,
+        info: u32,
+        clip_inps: u32,
+        clip_els: u32,
+        clip_bics: u32,
+        clip_bboxes: u32,
+        draw_bboxes: u32,
+        bump_alloc: u32,
+        indirect_count: u32,
+        bin_headers: u32,
+        paths: u32,
+        // Bump allocated buffers
+        lines: u32,
+        bin_data: u32,
+        tiles: u32,
+        seg_counts: u32,
+        segments: u32,
+        ptcl: u32,
+    }
+Unixcoder Score: -0.042268142104148865
+--------------------------------------------------

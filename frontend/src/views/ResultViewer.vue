@@ -84,6 +84,27 @@
         <el-col :span="6" v-if="report.final_rust_files != null">
           <el-statistic title="Final Rust Files" :value="report.final_rust_files" />
         </el-col>
+        <el-col :span="6" v-if="report.total_effective_lines != null">
+          <el-statistic title="Effective Lines" :value="report.total_effective_lines">
+            <template #suffix>
+              <span class="stat-suffix-muted">(excl. comments)</span>
+            </template>
+          </el-statistic>
+        </el-col>
+        <el-col :span="6" v-if="report.unsafe_blocks != null">
+          <el-statistic title="Unsafe Blocks" :value="report.unsafe_blocks">
+            <template #suffix>
+              <span class="stat-suffix-unsafe">{{ report.unsafe_effective_lines }} lines</span>
+            </template>
+          </el-statistic>
+        </el-col>
+        <el-col :span="6" v-if="report.unsafe_ratio != null">
+          <el-statistic title="Unsafe Ratio" :value="report.unsafe_ratio + '%'">
+            <template #suffix>
+              <span class="stat-suffix-muted">{{ report.unsafe_effective_lines }} / {{ report.total_effective_lines }}</span>
+            </template>
+          </el-statistic>
+        </el-col>
       </el-row>
       <!-- C2Rust stats -->
       <el-row v-else :gutter="16">
@@ -349,6 +370,14 @@ async function onDownloadReport() {
   color: #909399;
 }
 .stat-suffix-fail {
+  font-size: 12px;
+  color: #909399;
+}
+.stat-suffix-unsafe {
+  font-size: 12px;
+  color: #e6a23c;
+}
+.stat-suffix-muted {
   font-size: 12px;
   color: #909399;
 }

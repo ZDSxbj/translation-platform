@@ -1,0 +1,199 @@
+C_Code: 
+bool WriteRemoteObject(MessageParcel &msgParcel, std::unique_ptr<IRemoteObjectWrapper> object)
+{
+    if (object->is_raw_) {
+        return false;
+    } else {
+        return msgParcel.WriteRemoteObject(object->sptr_);
+    }
+}
+Function: 
+pub fn write_remote(&mut self, remote: RemoteObj) -> IpcResult<()> {
+        self.write_process(remote.inner, WriteRemoteObject)
+    }
+Unixcoder Score: 0.04304627701640129
+--------------------------------------------------
+C_Code: 
+bool WriteRemoteObject(MessageParcel &msgParcel, std::unique_ptr<IRemoteObjectWrapper> object)
+{
+    if (object->is_raw_) {
+        return false;
+    } else {
+        return msgParcel.WriteRemoteObject(object->sptr_);
+    }
+}
+Function: 
+fn new_remote_obj(wrap: UniquePtr<ffi::IRemoteObjectWrapper>) -> Box<RemoteObj> {
+    Box::new(RemoteObj::try_new(wrap).unwrap())
+}
+Unixcoder Score: 0.039475761353969574
+--------------------------------------------------
+C_Code: 
+sptr<IRemoteObject> CJ_rpc_getNativeRemoteObject(int64_t object)
+{
+    auto remoteObject = FFIData::GetData<CjIRemoteObjectImpl>(object);
+    if (!remoteObject) {
+        ZLOGE(LOG_LABEL, "get stub constructor failed");
+        return nullptr;
+    }
+    return remoteObject->GetRemoteObject();
+}
+Function: 
+pub unsafe fn from_ciremote(remote: *mut IRemoteObject) -> Option<Self> {
+        if remote.is_null() {
+            return None;
+        }
+
+        let inner = FromCIRemoteObject(remote);
+        if inner.is_null() {
+            return None;
+        }
+
+        Some(Self { inner })
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "Partial", "source_c_file": "Partial__WriteRemoteObject__idx4688_rank3.c", "source_rust_file": "Partial__WriteRemoteObject__idx4688_rank3.rs", "c_fragment": "if (object->is_raw_) {\n        return false;\n    } else {\n        return msgParcel.WriteRemoteObject(object->sptr_);\n    }", "rust_fragment": "if remote.is_null() {\n                Err(IpcStatusCode::Failed)\n            } else {\n                Ok(remote)\n            }", "description": "Conditional logic for handling null/invalid remote object with early return", "reasoning": "[Task Analysis] C function writes a remote object to a parcel; Rust function reads a remote object from a parcel. [Similarity] Names don't match but both involve remote object handling and conditional logic. [Knowledge Extraction] Found partial structural match in conditional logic and API mapping for remote object read/write operations."}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__WriteRemoteObject__idx4688_rank3.c", "source_rust_file": "Partial__WriteRemoteObject__idx4688_rank3.rs", "c_api": "msgParcel.WriteRemoteObject", "rust_api": "ReadRemoteObject", "mapping_type": "function", "description": "Remote object serialization/deserialization", "reasoning": "[Task Analysis] C function writes a remote object to a parcel; Rust function reads a remote object from a parcel. [Similarity] Names don't match but both involve remote object handling and conditional logic. [Knowledge Extraction] Found partial structural match in conditional logic and API mapping for remote object read/write operations."}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__WriteRemoteObject__idx4688_rank3.c", "source_rust_file": "Partial__WriteRemoteObject__idx4688_rank3.rs", "c_api": "object->is_raw_", "rust_api": "remote.is_null()", "mapping_type": "field_access", "description": "Checking if remote object is valid/initialized", "reasoning": "[Task Analysis] C function writes a remote object to a parcel; Rust function reads a remote object from a parcel. [Similarity] Names don't match but both involve remote object handling and conditional logic. [Knowledge Extraction] Found partial structural match in conditional logic and API mapping for remote object read/write operations."}]
+Unixcoder Score: 0.03845283016562462
+--------------------------------------------------
+C_Code: 
+bool WriteRemoteObject(MessageParcel &msgParcel, std::unique_ptr<IRemoteObjectWrapper> object)
+{
+    if (object->is_raw_) {
+        return false;
+    } else {
+        return msgParcel.WriteRemoteObject(object->sptr_);
+    }
+}
+Function: 
+fn new_remote_obj(wrap: UniquePtr<ffi::IRemoteObjectWrapper>) -> Box<RemoteObj> {
+    Box::new(RemoteObj::try_new(wrap).unwrap())
+}
+Unixcoder Score: 0.03807992860674858
+--------------------------------------------------
+C_Code: 
+bool WriteRemoteObject(MessageParcel &msgParcel, std::unique_ptr<IRemoteObjectWrapper> object)
+{
+    if (object->is_raw_) {
+        return false;
+    } else {
+        return msgParcel.WriteRemoteObject(object->sptr_);
+    }
+}
+Function: 
+pub fn write_remote(&mut self, remote: RemoteObj) -> IpcResult<()> {
+        self.write_process(remote.inner, WriteRemoteObject)
+    }
+Unixcoder Score: 0.032278407365083694
+--------------------------------------------------
+C_Code: 
+void DetachObjectFuzzTest(const uint8_t *data, size_t size)
+{
+    if (data == nullptr || size == 0) {
+        return;
+    }
+    MessageParcel parcel;
+    parcel.WriteBuffer(data, size);
+    sptr<IRemoteObject> object = parcel.ReadRemoteObject();
+    OHOS::IPCProcessSkeleton *ipcSktPtr = IPCProcessSkeleton::GetCurrent();
+    if (ipcSktPtr == nullptr) {
+        return;
+    }
+    (void)ipcSktPtr->DetachObject(object);
+}
+Function: 
+pub fn read_remote(&mut self) -> IpcResult<RemoteObj> {
+        fn read_remote_process(
+            parcel: Pin<&mut MessageParcel>,
+        ) -> IpcResult<UniquePtr<IRemoteObjectWrapper>> {
+            let remote = ReadRemoteObject(parcel);
+            if remote.is_null() {
+                Err(IpcStatusCode::Failed)
+            } else {
+                Ok(remote)
+            }
+        }
+
+        self.read_process(read_remote_process)
+            .map(|remote| unsafe { RemoteObj::new_unchecked(remote) })
+    }
+Unixcoder Score: 0.029995186254382133
+--------------------------------------------------
+C_Code: 
+bool WriteRemoteObject(MessageParcel &msgParcel, std::unique_ptr<IRemoteObjectWrapper> object)
+{
+    if (object->is_raw_) {
+        return false;
+    } else {
+        return msgParcel.WriteRemoteObject(object->sptr_);
+    }
+}
+Function: 
+pub fn read_remote(&mut self) -> IpcResult<RemoteObj> {
+        fn read_remote_process(
+            parcel: Pin<&mut MessageParcel>,
+        ) -> IpcResult<UniquePtr<IRemoteObjectWrapper>> {
+            let remote = ReadRemoteObject(parcel);
+            if remote.is_null() {
+                Err(IpcStatusCode::Failed)
+            } else {
+                Ok(remote)
+            }
+        }
+
+        self.read_process(read_remote_process)
+            .map(|remote| unsafe { RemoteObj::new_unchecked(remote) })
+    }
+Unixcoder Score: 0.028862444683909416
+--------------------------------------------------
+C_Code: 
+int32_t GetObjectRefCount() const;
+    bool IsProxyObject() const;
+    bool IsObjectDead() const;
+    bool CheckObjectLegality() const;
+    int Dump(int fd, const rust::Slice<const rust::string> args) const;
+
+    std::unique_ptr<DeathRecipientRemoveHandler> AddDeathRecipient(rust::Box<ClosureWrapper>) const;
+
+    IRemoteObject *GetInner() const;
+
+    bool is_raw_ = false;
+    sptr<IRemoteObject> sptr_;
+    IRemoteObject *raw_;
+};
+
+struct DeathRecipientWrapper : public virtual IRemoteObject::DeathRecipient {
+public:
+    DeathRecipientWrapper(rust::Box<ClosureWrapper> cb);
+    virtual void OnRemoteDied(const OHOS::wptr<OHOS::IRemoteObject> &object) override;
+
+private:
+    rust::Box<ClosureWrapper> inner_;
+}
+Function: 
+pub fn is_proxy(&self) -> bool {
+        self.inner.IsProxyObject()
+    }
+Unixcoder Score: 0.02705552987754345
+--------------------------------------------------
+C_Code: 
+bool IRemoteObjectWrapper::IsObjectDead() const
+{
+    return GetInner()->IsObjectDead();
+}
+Function: 
+pub fn is_dead(&self) -> bool {
+        self.inner.IsObjectDead()
+    }
+Unixcoder Score: 0.013066635467112064
+--------------------------------------------------
+C_Code: 
+bool IRemoteObjectWrapper::IsObjectDead() const
+{
+    return GetInner()->IsObjectDead();
+}
+Function: 
+pub fn check_legalit(&self) -> bool {
+        self.inner.CheckObjectLegality()
+    }
+Unixcoder Score: 0.011685039848089218
+--------------------------------------------------

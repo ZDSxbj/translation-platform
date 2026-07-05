@@ -1,0 +1,234 @@
+C_Code: 
+struct s_rust_personality_args {
+    _Unwind_Reason_Code retval;
+    int version;
+    _Unwind_Action actions;
+    uint64_t exception_class;
+    struct _Unwind_Exception *ue_header;
+    struct _Unwind_Context *context;
+}
+Function: 
+pub struct _Unwind_Exception {
+        exception_class: _Unwind_Exception_Class,
+        exception_cleanup: _Unwind_Exception_Cleanup_Fn,
+        private_1: _Unwind_Word,
+        private_2: _Unwind_Word,
+    }
+Unixcoder Score: 0.15806008875370026
+--------------------------------------------------
+C_Code: 
+struct s_rust_personality_args {
+    _Unwind_Reason_Code retval;
+    int version;
+    _Unwind_Action actions;
+    uint64_t exception_class;
+    struct _Unwind_Exception *ue_header;
+    struct _Unwind_Context *context;
+}
+Function: 
+pub struct _Unwind_Exception {
+    exception_class: _Unwind_Exception_Class,
+    exception_cleanup: _Unwind_Exception_Cleanup_Fn,
+    private: [_Unwind_Word, ..unwinder_private_data_size],
+}
+Unixcoder Score: 0.11188703775405884
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManager::SubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener)
+{
+    if (abilityStateScheduler_ == nullptr) {
+        HILOGE("abilityStateScheduler is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    return abilityStateScheduler_->SubscribeSystemProcess(listener);
+}
+Function: 
+pub fn subscribe_system_process(
+        on_start: fn(&SystemProcessInfo),
+        on_stop: fn(&SystemProcessInfo),
+    ) -> UnsubscribeHandler {
+        UnsubscribeHandler::new(Unsubscribe::Process(SubscribeSystemProcess(
+            on_start, on_stop,
+        )))
+    }
+Unixcoder Score: 0.09374450147151947
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManagerStub::SubscribeSystemProcessInner(MessageParcel& data, MessageParcel& reply)
+{
+    if (!CanRequest()) {
+        HILOGE("SubscribeSystemProcessInner PERMISSION DENIED!");
+        return ERR_PERMISSION_DENIED;
+    }
+    sptr<IRemoteObject> remoteObject = data.ReadRemoteObject();
+    if (remoteObject == nullptr) {
+        HILOGW("SubscribeSystemProcessInner read listener failed!");
+        return ERR_NULL_OBJECT;
+    }
+    sptr<ISystemProcessStatusChange> listener = iface_cast<ISystemProcessStatusChange>(remoteObject);
+    if (listener == nullptr) {
+        HILOGW("SubscribeSystemProcessInner iface_cast failed!");
+        return ERR_NULL_OBJECT;
+    }
+    int32_t result = SubscribeSystemProcess(listener);
+    HILOGD("SubscribeSystemProcess result is %{public}d", result);
+    bool ret = reply.WriteInt32(result);
+    if (!ret) {
+        HILOGW("SubscribeSystemProcessInner write reply failed.");
+        return ERR_FLATTEN_OBJECT;
+    }
+    return result;
+}
+Function: 
+pub fn subscribe_system_process(
+        on_start: fn(&SystemProcessInfo),
+        on_stop: fn(&SystemProcessInfo),
+    ) -> UnsubscribeHandler {
+        UnsubscribeHandler::new(Unsubscribe::Process(SubscribeSystemProcess(
+            on_start, on_stop,
+        )))
+    }
+Unixcoder Score: 0.0677202045917511
+--------------------------------------------------
+C_Code: 
+class RSLCTRemoteObjectImpl : public OHOS::IRemoteObject {}
+Function: 
+pub struct RequestProxy {
+    remote: Mutex<SaState>,
+}
+Unixcoder Score: 0.06145549193024635
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManager::SubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener)
+{
+    if (abilityStateScheduler_ == nullptr) {
+        HILOGE("abilityStateScheduler is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    return abilityStateScheduler_->SubscribeSystemProcess(listener);
+}
+Function: 
+pub fn subscribe_system_process(
+        on_start: fn(&SystemProcessInfo),
+        on_stop: fn(&SystemProcessInfo),
+    ) -> UnsubscribeHandler {
+        UnsubscribeHandler::new(Unsubscribe::Process(SubscribeSystemProcess(
+            on_start, on_stop,
+        )))
+    }
+Unixcoder Score: 0.06081375479698181
+--------------------------------------------------
+C_Code: 
+class Pass
+Function: 
+pub struct Glyph {
+    /// The Unicode codepoint or glyph ID of the item
+    pub codepoint: u32,
+    /// The index of the cluster in the input text where this came from
+    pub cluster: u32,
+    /// The horizontal advance of the glyph
+    pub x_advance: i32,
+    /// The vertical advance of the glyph
+    pub y_advance: i32,
+    /// The horizontal offset of the glyph
+    pub x_offset: i32,
+    /// The vertical offset of the glyph
+    pub y_offset: i32,
+    /// You can use this for whatever you like
+    pub flags: u32,
+}
+Unixcoder Score: 0.04024486988782883
+--------------------------------------------------
+C_Code: 
+class SPIRV_TOOLS_EXPORT
+Function: 
+struct BufferSizes {
+        // Known size buffers
+        path_reduced: u32,
+        path_reduced2: u32,
+        path_reduced_scan: u32,
+        path_monoids: u32,
+        path_bboxes: u32,
+        draw_reduced: u32,
+        draw_monoids: u32,
+        info: u32,
+        clip_inps: u32,
+        clip_els: u32,
+        clip_bics: u32,
+        clip_bboxes: u32,
+        draw_bboxes: u32,
+        bump_alloc: u32,
+        indirect_count: u32,
+        bin_headers: u32,
+        paths: u32,
+        // Bump allocated buffers
+        lines: u32,
+        bin_data: u32,
+        tiles: u32,
+        seg_counts: u32,
+        segments: u32,
+        ptcl: u32,
+    }
+Unixcoder Score: 0.022391602396965027
+--------------------------------------------------
+C_Code: 
+class SPIRV_TOOLS_EXPORT
+Function: 
+struct BufferSizes {
+        // Known size buffers
+        path_reduced: u32,
+        path_reduced2: u32,
+        path_reduced_scan: u32,
+        path_monoids: u32,
+        path_bboxes: u32,
+        draw_reduced: u32,
+        draw_monoids: u32,
+        info: u32,
+        clip_inps: u32,
+        clip_els: u32,
+        clip_bics: u32,
+        clip_bboxes: u32,
+        draw_bboxes: u32,
+        bump_alloc: u32,
+        indirect_count: u32,
+        bin_headers: u32,
+        paths: u32,
+        // Bump allocated buffers
+        lines: u32,
+        bin_data: u32,
+        tiles: u32,
+        seg_counts: u32,
+        segments: u32,
+        ptcl: u32,
+    }
+Unixcoder Score: 0.02140539512038231
+--------------------------------------------------
+C_Code: 
+class SPIRV_TOOLS_EXPORT
+Function: 
+struct DispatchInfo {
+        use_large_path_scan: bool,
+
+        // Dispatch workgroup counts for each pipeline
+        path_reduce: WorkgroupSize,
+        path_reduce2: WorkgroupSize,
+        path_scan1: WorkgroupSize,
+        path_scan: WorkgroupSize,
+        bbox_clear: WorkgroupSize,
+        flatten: WorkgroupSize,
+        draw_reduce: WorkgroupSize,
+        draw_leaf: WorkgroupSize,
+        clip_reduce: WorkgroupSize,
+        clip_leaf: WorkgroupSize,
+        binning: WorkgroupSize,
+        tile_alloc: WorkgroupSize,
+        path_count_setup: WorkgroupSize,
+        // Note: `path_count` must use an indirect dispatch
+        backdrop: WorkgroupSize,
+        coarse: WorkgroupSize,
+        path_tiling_setup: WorkgroupSize,
+        // Note: `path_tiling` must use an indirect dispatch
+        fine: WorkgroupSize,
+    }
+Unixcoder Score: 0.01971348002552986
+--------------------------------------------------

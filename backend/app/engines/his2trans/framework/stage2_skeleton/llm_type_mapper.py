@@ -213,12 +213,16 @@ class LLMTypeMapper:
                     "content": "{"  # 强制以 JSON 开始
                 })
             
-            response = self.llm_client.chat.completions.create(
+            api_kwargs = dict(
                 model=self.model_name,
                 messages=messages,
-                temperature=0.05,  # 更低温度以获得更稳定的结果
+                temperature=0.05,
                 max_tokens=1500,
             )
+            # Disable reasoning/thinking for DeepSeek v4 models
+            if "deepseek-v4" in str(self.model_name).lower():
+                api_kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
+            response = self.llm_client.chat.completions.create(**api_kwargs)
             
             result = response.choices[0].message.content
             
@@ -635,9 +639,12 @@ def create_llm_type_mapper(
                 api_key=api_key,
                 timeout=timeout,
             )
-            # 测试连接
-            llm_client.models.list()
-            logger.info(f"已连接到 LLM: {vllm_url}")
+            # 测试连接（忽略不支持的 providers 如 DeepSeek）
+            try:
+                llm_client.models.list()
+                logger.info(f"已连接到 LLM: {vllm_url}")
+            except Exception:
+                logger.info(f"LLM models.list() 不可用（部分 provider 不支持），已跳过连接测试")
         except Exception as e:
             logger.warning(f"无法连接到 LLM: {e}")
             llm_client = None

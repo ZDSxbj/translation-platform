@@ -5117,8 +5117,11 @@ pub const LOS_ERRNO_TSK_ID_INVALID: u32 = 0x02000207;
         try:
             from openai import OpenAI
             llm_client = OpenAI(base_url=api_base, api_key=api_key, timeout=timeout)
-            # 测试连接
-            llm_client.models.list()
+            # 测试连接（部分 provider 如 DeepSeek 不支持 /models 端点）
+            try:
+                llm_client.models.list()
+            except Exception:
+                logger.info("LLM models.list() 不可用，已跳过连接测试")
         except Exception as e:
             logger.warning(f"LLM 客户端初始化失败，跳过 LLM 兜底: {e}")
             return False

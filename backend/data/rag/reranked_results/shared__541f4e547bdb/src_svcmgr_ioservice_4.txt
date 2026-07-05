@@ -1,0 +1,275 @@
+C_Code: 
+int32_t SystemAbilityManager::SubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener)
+{
+    if (abilityStateScheduler_ == nullptr) {
+        HILOGE("abilityStateScheduler is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    return abilityStateScheduler_->SubscribeSystemProcess(listener);
+}
+Function: 
+pub fn subscribe_system_process(
+        on_start: fn(&SystemProcessInfo),
+        on_stop: fn(&SystemProcessInfo),
+    ) -> UnsubscribeHandler {
+        UnsubscribeHandler::new(Unsubscribe::Process(SubscribeSystemProcess(
+            on_start, on_stop,
+        )))
+    }
+Unixcoder Score: 0.044413577765226364
+--------------------------------------------------
+C_Code: 
+struct UdsListenerWrapper
+Function: 
+pub struct UdsListener {
+    state: Mutex<ChannelState>,
+}
+Unixcoder Score: 0.04405176639556885
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManager::SubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener)
+{
+    if (abilityStateScheduler_ == nullptr) {
+        HILOGE("abilityStateScheduler is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    return abilityStateScheduler_->SubscribeSystemProcess(listener);
+}
+Function: 
+pub fn subscribe_system_process(
+        on_start: fn(&SystemProcessInfo),
+        on_stop: fn(&SystemProcessInfo),
+    ) -> UnsubscribeHandler {
+        UnsubscribeHandler::new(Unsubscribe::Process(SubscribeSystemProcess(
+            on_start, on_stop,
+        )))
+    }
+Unixcoder Score: 0.03670740872621536
+--------------------------------------------------
+C_Code: 
+int32_t ISystemAbilityManagerMock::UnSubscribeSystemAbility(int32_t systemAbilityId,
+    const sptr<ISystemAbilityStatusChange>& listener)
+{
+    return 0;
+}
+Function: 
+pub fn remove_system_ability(said: i32) -> i32 {
+        info!("remove system ability {}", said);
+        RemoveSystemAbility(said)
+    }
+Unixcoder Score: 0.036574285477399826
+--------------------------------------------------
+C_Code: 
+struct UdsListenerWrapper
+Function: 
+struct Response {
+        taskId: String,
+        version: String,
+        statusCode: i32,
+        reason: String,
+        headers: Vec<String>,
+    }
+Unixcoder Score: 0.022141877561807632
+--------------------------------------------------
+C_Code: 
+void RequestManagerImpl::RestoreListener(void (*callback)())
+{
+    callback_ = callback;
+}
+Function: 
+pub(super) fn run(
+        request: DownloadRequest,
+        mut callback: PrimeCallback,
+    ) -> Arc<dyn CommonHandle> {
+        let url = match PercentEncoder::encode(request.url) {
+            Ok(url) => url,
+            Err(e) => {
+                callback.common_fail(e);
+                return Arc::new(CancelHandle::new(Arc::new(AtomicBool::new(false))));
+            }
+        };
+        callback.set_running();
+        let flag = Arc::new(AtomicBool::new(false));
+        let handle = Arc::new(CancelHandle::new(flag.clone()));
+        let mut headers = None;
+        if let Some(h) = request.headers {
+            headers = Some(
+                h.iter()
+                    .map(|a| (a.0.to_string(), a.1.to_string()))
+                    .collect(),
+            );
+        }
+        ylong_runtime::spawn(async move {
+            if let Err(e) = download(url, headers, &mut callback, flag).await {
+                if e.error_kind() == ErrorKind::UserAborted {
+                    callback.common_cancel();
+                } else {
+                    callback.common_fail(e);
+                }
+            }
+        });
+        handle
+    }
+Unixcoder Score: 0.007035709917545319
+--------------------------------------------------
+C_Code: 
+void RequestManagerImpl::RestoreListener(void (*callback)())
+{
+    callback_ = callback;
+}
+Function: 
+pub(super) fn run(
+        request: DownloadRequest,
+        mut callback: PrimeCallback,
+    ) -> Arc<dyn CommonHandle> {
+        let url = match PercentEncoder::encode(request.url) {
+            Ok(url) => url,
+            Err(e) => {
+                callback.common_fail(e);
+                return Arc::new(CancelHandle::new(Arc::new(AtomicBool::new(false))));
+            }
+        };
+        callback.set_running();
+        let flag = Arc::new(AtomicBool::new(false));
+        let handle = Arc::new(CancelHandle::new(flag.clone()));
+        let mut headers = None;
+        if let Some(h) = request.headers {
+            headers = Some(
+                h.iter()
+                    .map(|a| (a.0.to_string(), a.1.to_string()))
+                    .collect(),
+            );
+        }
+        ylong_runtime::spawn(async move {
+            if let Err(e) = download(url, headers, &mut callback, flag).await {
+                if e.error_kind() == ErrorKind::UserAborted {
+                    callback.common_cancel();
+                } else {
+                    callback.common_fail(e);
+                }
+            }
+        });
+        handle
+    }
+Unixcoder Score: 0.004397041164338589
+--------------------------------------------------
+C_Code: 
+void RequestManagerImpl::RestoreListener(void (*callback)())
+{
+    callback_ = callback;
+}
+Function: 
+fn poll_progress(
+        self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+        downloaded: u64,
+        total: Option<u64>,
+    ) -> Poll<Result<(), HttpClientError>> {
+        let me = self.get_mut();
+        me.callback
+            .common_progress(total.unwrap_or_default(), downloaded, 0, 0);
+        if me.abort_flag.load(Ordering::Acquire) {
+            Poll::Ready(Err(HttpClientError::user_aborted()))
+        } else {
+            Poll::Ready(Ok(()))
+        }
+    }
+Unixcoder Score: 0.002726517617702484
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManager::UnSubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener)
+{
+    if (abilityStateScheduler_ == nullptr) {
+        HILOGE("abilityStateScheduler is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    return abilityStateScheduler_->UnSubscribeSystemProcess(listener);
+}
+Function: 
+pub fn unsubscribe(self) {
+        match self.inner {
+            Unsubscribe::Ability(mut p) => p.pin_mut().UnSubscribe(),
+            Unsubscribe::Process(mut p) => p.pin_mut().UnSubscribe(),
+        }
+    }
+Unixcoder Score: 0.0008372378069907427
+--------------------------------------------------
+C_Code: 
+int32_t RequestServiceProxy::SubRunCount(const sptr<NotifyInterface> &listener)
+{
+    REQUEST_HILOGD("Request SubRunCount");
+    FwkRunningTaskCountManager::GetInstance()->SetSaStatus(true);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(GetDescriptor());
+    data.WriteRemoteObject(listener->AsObject());
+    int32_t ret =
+        Remote()->SendRequest(static_cast<uint32_t>(RequestInterfaceCode::CMD_SUB_RUNCOUNT), data, reply, option);
+    if (ret != ERR_NONE) {
+        REQUEST_HILOGE("End Request SubRunCount, failed: %{public}d", ret);
+        if (ret != REMOTE_DIED_ERROR) {
+            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));
+        }
+        return ret;
+    }
+    int32_t errCode = reply.ReadInt32();
+    if (errCode != E_OK) {
+        REQUEST_HILOGE("End Request SubRunCount, failed: %{public}d", errCode);
+        SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_01, std::to_string(errCode));
+        return errCode;
+    }
+    REQUEST_HILOGD("End Request SubRunCount ok");
+    return E_OK;
+}
+Function: 
+fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+        self.sa_handler.cancel_idle();
+        self.active_counter.increment();
+        const SERVICE_TOKEN: &str = "OHOS.Download.RequestServiceInterface";
+        debug!("Processes on_remote_request, code: {}", code);
+        match data.read_interface_token() {
+            Ok(token) if token == SERVICE_TOKEN => {}
+            _ => {
+                error!("Gets invalid token");
+                sys_event!(ExecError, DfxCode::INVALID_IPC_MESSAGE_A00, "Gets invalid token");
+                self.active_counter.decrement();
+                return IpcStatusCode::Failed as i32;
+            }
+        };
+        let res = match code {
+            interface::CONSTRUCT => self.construct(data, reply),
+            interface::PAUSE => self.pause(data, reply),
+            interface::QUERY => self.query(data, reply),
+            interface::QUERY_MIME_TYPE => self.query_mime_type(data, reply),
+            interface::REMOVE => self.remove(data, reply),
+            interface::RESUME => self.resume(data, reply),
+            interface::START => self.start(data, reply),
+            interface::STOP => self.stop(data, reply),
+            interface::SHOW => self.show(data, reply),
+            interface::TOUCH => self.touch(data, reply),
+            interface::SEARCH => self.search(data, reply),
+            interface::GET_TASK => self.get_task(data, reply),
+            interface::CLEAR => Ok(()),
+            interface::OPEN_CHANNEL => self.open_channel(reply),
+            interface::SUBSCRIBE => self.subscribe(data, reply),
+            interface::UNSUBSCRIBE => self.unsubscribe(data, reply),
+            interface::SUB_RUN_COUNT => self.subscribe_run_count(data, reply),
+            interface::UNSUB_RUN_COUNT => self.unsubscribe_run_count(reply),
+            interface::CREATE_GROUP => self.create_group(data, reply),
+            interface::ATTACH_GROUP => self.attach_group(data, reply),
+            interface::DELETE_GROUP => self.delete_group(data, reply),
+            interface::SET_MAX_SPEED => self.set_max_speed(data, reply),
+            interface::SET_MODE => self.set_mode(data, reply),
+            interface::DISABLE_TASK_NOTIFICATION => self.disable_task_notifications(data, reply),
+            _ => Err(IpcStatusCode::Failed),
+        };
+
+        self.active_counter.decrement();
+        match res {
+            Ok(_) => 0,
+            Err(e) => e as i32,
+        }
+    }
+Unixcoder Score: -0.004211992025375366
+--------------------------------------------------

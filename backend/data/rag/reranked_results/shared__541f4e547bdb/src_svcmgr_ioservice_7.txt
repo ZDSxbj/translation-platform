@@ -1,0 +1,308 @@
+C_Code: 
+sptr<IRemoteObject> IPCProcessSkeleton::GetSAMgrObject()
+{
+    if (g_interface == nullptr) {
+        return nullptr;
+    }
+    return GetDBinderCallbackStubInterface()->GetSAMgrObject();
+}
+Function: 
+pub unsafe fn from_ciremote(remote: *mut IRemoteObject) -> Option<Self> {
+        if remote.is_null() {
+            return None;
+        }
+
+        let inner = FromCIRemoteObject(remote);
+        if inner.is_null() {
+            return None;
+        }
+
+        Some(Self { inner })
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicStore__idx117699_rank3.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicStore__idx117699_rank3.rs", "c_api": "LLVMRustBuildAtomicStore", "rust_api": "intrinsics::atomic_or_acqrel", "mapping_type": "function", "description": "Atomic store operation with memory ordering", "reasoning": "[Task Analysis] C function is a LLVM IR builder helper for atomic store, Rust function is a generic atomic OR operation. [Similarity] Names do not refer to the same concept (LLVMRustBuildAtomicStore vs atomic_or), and domains are different (LLVM IR construction vs low-level atomic operations). [Knowledge Extraction] No full or partial match due to domain mismatch and name mismatch. However, both involve atomic operations and memory ordering, so API mappings can be extracted."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicStore__idx117699_rank3.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicStore__idx117699_rank3.rs", "c_api": "LLVMRustBuildAtomicStore", "rust_api": "intrinsics::atomic_or_relaxed", "mapping_type": "function", "description": "Atomic store operation with memory ordering", "reasoning": "[Task Analysis] C function is a LLVM IR builder helper for atomic store, Rust function is a generic atomic OR operation. [Similarity] Names do not refer to the same concept (LLVMRustBuildAtomicStore vs atomic_or), and domains are different (LLVM IR construction vs low-level atomic operations). [Knowledge Extraction] No full or partial match due to domain mismatch and name mismatch. However, both involve atomic operations and memory ordering, so API mappings can be extracted."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicStore__idx117699_rank3.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicStore__idx117699_rank3.rs", "c_api": "LLVMRustBuildAtomicStore", "rust_api": "intrinsics::atomic_or_acquire", "mapping_type": "function", "description": "Atomic store operation with memory ordering", "reasoning": "[Task Analysis] C function is a LLVM IR builder helper for atomic store, Rust function is a generic atomic OR operation. [Similarity] Names do not refer to the same concept (LLVMRustBuildAtomicStore vs atomic_or), and domains are different (LLVM IR construction vs low-level atomic operations). [Knowledge Extraction] No full or partial match due to domain mismatch and name mismatch. However, both involve atomic operations and memory ordering, so API mappings can be extracted."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicStore__idx117699_rank3.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicStore__idx117699_rank3.rs", "c_api": "LLVMRustBuildAtomicStore", "rust_api": "intrinsics::atomic_or_release", "mapping_type": "function", "description": "Atomic store operation with memory ordering", "reasoning": "[Task Analysis] C function is a LLVM IR builder helper for atomic store, Rust function is a generic atomic OR operation. [Similarity] Names do not refer to the same concept (LLVMRustBuildAtomicStore vs atomic_or), and domains are different (LLVM IR construction vs low-level atomic operations). [Knowledge Extraction] No full or partial match due to domain mismatch and name mismatch. However, both involve atomic operations and memory ordering, so API mappings can be extracted."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicStore__idx117699_rank3.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicStore__idx117699_rank3.rs", "c_api": "LLVMRustBuildAtomicStore", "rust_api": "intrinsics::atomic_or_seqcst", "mapping_type": "function", "description": "Atomic store operation with memory ordering", "reasoning": "[Task Analysis] C function is a LLVM IR builder helper for atomic store, Rust function is a generic atomic OR operation. [Similarity] Names do not refer to the same concept (LLVMRustBuildAtomicStore vs atomic_or), and domains are different (LLVM IR construction vs low-level atomic operations). [Knowledge Extraction] No full or partial match due to domain mismatch and name mismatch. However, both involve atomic operations and memory ordering, so API mappings can be extracted."}]
+Unixcoder Score: -0.025213781744241714
+--------------------------------------------------
+C_Code: 
+static void AnonymousTest(void)
+{
+    IpcIo anonymous;
+    uint8_t anonymousData[IPC_MAX_SIZE];
+    IpcIoInit(&anonymous, anonymousData, IPC_MAX_SIZE, 1);
+    WriteRemoteObject(&anonymous, &g_clientSvc);
+
+    IpcIo anonymousreply;
+    uintptr_t anonymousptr = 0;
+    int ret = SendRequest(g_serverSid, SERVER_OP_ADD_SERVICE, &anonymous, &anonymousreply, g_option, &anonymousptr);
+    int res = -1;
+    ReadInt32(&anonymousreply, &res);
+    RPC_LOG_INFO("add self to server = %d", res);
+    FreeBuffer((void *)anonymousptr);
+    EXPECT_EQ(ret, ERR_NONE);
+    EXPECT_EQ(res, ERR_NONE);
+}
+Function: 
+pub fn add_service(service: &RemoteObj, said: i32)
+{
+    let samgr = get_samgr().expect("samgr is not null");
+    let mut data = MsgParcel::new().expect("MsgParcel is not null");
+    match data.write(&InterFaceToken::new("ohos.samgr.accessToken")) {
+        Ok(()) => { println!("write token success") }
+        Err(val) => { println!("write token fail: {}", val) }
+    }
+    match data.write(&said) {
+        Ok(()) => { println!("write said success") }
+        Err(val) => { println!("write said fail: {}", val) }
+    }
+    match data.write(service) {
+        Ok(()) => { println!("write service success") }
+        Err(val) => { println!("write service fail: {}", val) }
+    }
+    match data.write(&false) {
+        Ok(()) => { println!("write bool success") }
+        Err(val) => { println!("write bool fail: {}", val) }
+    }
+    match data.write(&0) {
+        Ok(()) => { println!("write 0 success") }
+        Err(val) => { println!("write 0 fail: {}", val) }
+    }
+    match data.write(&String16::new("")) {
+        Ok(()) => { println!("write string16 111 success") }
+        Err(val) => { println!("write string16 111 fail: {}", val) }
+    }
+    match data.write(&String16::new("")) {
+        Ok(()) => { println!("write string16 222 success") }
+        Err(val) => { println!("write string16 222 fail: {}", val) }
+    }
+    let reply = samgr.send_request(3, &data, false).expect("failed to register service");
+    let replyValue: i32 = reply.read().expect("register service reply should 0");
+    println!("register service result: {}", replyValue);
+}
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicStore__idx117672_rank5.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicStore__idx117672_rank5.rs", "c_api": "LLVMRustBuildAtomicStore", "rust_api": "atomic_load", "mapping_type": "function", "description": "Atomic memory operation (store vs load)", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [Filter 1: Entity Name Check] -> [Filter 2: Empty/Trivial Code] -> [Filter 3: FFI Wrapper] -> [Filter 4: Semantic Domain Mismatch] -> [Filter 5: Empty Structs] -> [Filter 6: Definition vs Usage Asymmetry] -> [Full/Partial/API Analysis]"}]
+Unixcoder Score: -0.03214969113469124
+--------------------------------------------------
+C_Code: 
+LLVMValueRef LLVMRustBuildAtomicStore(LLVMBuilderRef B,
+                                                 LLVMValueRef V,
+                                                 LLVMValueRef Target,
+                                                 LLVMAtomicOrdering Order) {
+  StoreInst *SI = unwrap(B)->CreateStore(unwrap(V), unwrap(Target));
+  SI->setAtomic(fromRust(Order));
+  return wrap(SI);
+}
+Function: 
+fn Store(cx: &@block_ctxt, Val: ValueRef, Ptr: ValueRef) -> ValueRef {
+    ret llvm::LLVMBuildStore(*cx.build, Val, Ptr);
+}
+Unixcoder Score: -0.045849163085222244
+--------------------------------------------------
+C_Code: 
+LLVMValueRef LLVMRustBuildAtomicStore(LLVMBuilderRef B,
+                                                 LLVMValueRef V,
+                                                 LLVMValueRef Target,
+                                                 LLVMAtomicOrdering Order) {
+  StoreInst *SI = unwrap(B)->CreateStore(unwrap(V), unwrap(Target));
+  SI->setAtomic(fromRust(Order));
+  return wrap(SI);
+}
+Function: 
+fn static_atomic(val: usize) -> &'static AtomicUsize {
+    let ret = Box::leak(Box::new(AtomicUsize::new(val)));
+    // A workaround to put the initialization value in the store buffer.
+    // See https://github.com/rust-lang/miri/issues/2164
+    ret.load(Relaxed);
+    ret
+}
+Unixcoder Score: -0.04779348894953728
+--------------------------------------------------
+C_Code: 
+LLVMValueRef LLVMRustBuildAtomicStore(LLVMBuilderRef B,
+                                                 LLVMValueRef V,
+                                                 LLVMValueRef Target,
+                                                 LLVMAtomicOrdering Order) {
+  StoreInst *SI = unwrap(B)->CreateStore(unwrap(V), unwrap(Target));
+  SI->setAtomic(fromRust(Order));
+  return wrap(SI);
+}
+Function: 
+pub fn rdmw(storing: &AtomicUsize, sync: &AtomicUsize, loading: &AtomicUsize) -> usize {
+        storing.store(1, Relaxed);
+        fence(Release);
+        // sync.fetch_add(0, Relaxed);
+        sync.load(Relaxed);
+        fence(Acquire);
+        loading.load(Relaxed)
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicStore__idx91237_rank1.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicStore__idx91237_rank1.rs", "c_api": "LLVMRustBuildAtomicStore", "rust_api": "write_scalar_atomic", "mapping_type": "function", "description": "Atomic store operation", "reasoning": "[Task Analysis] C function is a low-level LLVM IR builder function for creating atomic store instructions; Rust function is a high-level interpreter function performing atomic store operations. [Similarity] Names do not refer to the same concept (LLVMRustBuildAtomicStore vs atomic_store), and domains are different (LLVM IR construction vs interpreter execution). [Knowledge Extraction] No full or partial structural match. However, both perform atomic store operations, so API mapping is extracted."}]
+Unixcoder Score: -0.04795090854167938
+--------------------------------------------------
+C_Code: 
+LLVMValueRef LLVMRustBuildAtomicStore(LLVMBuilderRef B,
+                                                 LLVMValueRef V,
+                                                 LLVMValueRef Target,
+                                                 LLVMAtomicOrdering Order) {
+  StoreInst *SI = unwrap(B)->CreateStore(unwrap(V), unwrap(Target));
+  SI->setAtomic(fromRust(Order));
+  return wrap(SI);
+}
+Function: 
+pub fn fetch_sub(&self, val: int, order: Ordering) -> int {
+        unsafe { atomic_sub(self.v.get(), val, order) }
+    }
+Unixcoder Score: -0.04795294627547264
+--------------------------------------------------
+C_Code: 
+LLVMValueRef LLVMRustBuildAtomicStore(LLVMBuilderRef B,
+                                                 LLVMValueRef V,
+                                                 LLVMValueRef Target,
+                                                 LLVMAtomicOrdering Order) {
+  StoreInst *SI = unwrap(B)->CreateStore(unwrap(V), unwrap(Target));
+  SI->setAtomic(fromRust(Order));
+  return wrap(SI);
+}
+Function: 
+pub fn fetch_sub(&self, val: uint, order: Ordering) -> uint {
+        unsafe { atomic_sub(self.v.get(), val, order) }
+    }
+Unixcoder Score: -0.04838033765554428
+--------------------------------------------------
+C_Code: 
+LLVMValueRef LLVMRustBuildAtomicStore(LLVMBuilderRef B,
+                                                 LLVMValueRef V,
+                                                 LLVMValueRef Target,
+                                                 LLVMAtomicOrdering Order) {
+  StoreInst *SI = unwrap(B)->CreateStore(unwrap(V), unwrap(Target));
+  SI->setAtomic(fromRust(Order));
+  return wrap(SI);
+}
+Function: 
+unsafe fn atomic_and<T: Copy>(dst: *mut T, val: T, order: Ordering) -> T {
+    // SAFETY: the caller must uphold the safety contract for `atomic_and`
+    unsafe {
+        match order {
+            Relaxed => intrinsics::atomic_and_relaxed(dst, val),
+            Acquire => intrinsics::atomic_and_acquire(dst, val),
+            Release => intrinsics::atomic_and_release(dst, val),
+            AcqRel => intrinsics::atomic_and_acqrel(dst, val),
+            SeqCst => intrinsics::atomic_and_seqcst(dst, val),
+        }
+    }
+}
+Unixcoder Score: -0.04850779101252556
+--------------------------------------------------
+C_Code: 
+LLVMValueRef LLVMRustBuildAtomicStore(LLVMBuilderRef B,
+                                                 LLVMValueRef V,
+                                                 LLVMValueRef Target,
+                                                 LLVMAtomicOrdering Order) {
+  StoreInst *SI = unwrap(B)->CreateStore(unwrap(V), unwrap(Target));
+  SI->setAtomic(fromRust(Order));
+  return wrap(SI);
+}
+Function: 
+fn store(&mut self, val:uint, order:Ordering) {
+        unsafe { atomic_store(&mut self.v, val, order); }
+    }
+Unixcoder Score: -0.048696067184209824
+--------------------------------------------------
+C_Code: 
+LLVMValueRef LLVMRustBuildAtomicStore(LLVMBuilderRef B,
+                                                 LLVMValueRef V,
+                                                 LLVMValueRef Target,
+                                                 LLVMAtomicOrdering Order) {
+  StoreInst *SI = unwrap(B)->CreateStore(unwrap(V), unwrap(Target));
+  SI->setAtomic(fromRust(Order));
+  return wrap(SI);
+}
+Function: 
+fn handle_assign(
+        &self,
+        target: Place<'tcx>,
+        rvalue: &Rvalue<'tcx>,
+        state: &mut State<Self::Value>,
+    ) {
+        match rvalue {
+            Rvalue::Aggregate(kind, operands) => {
+                // If we assign `target = Enum::Variant#0(operand)`,
+                // we must make sure that all `target as Variant#i` are `Top`.
+                state.flood(target.as_ref(), self.map());
+
+                let Some(target_idx) = self.map().find(target.as_ref()) else { return };
+
+                let (variant_target, variant_index) = match **kind {
+                    AggregateKind::Tuple | AggregateKind::Closure(..) => (Some(target_idx), None),
+                    AggregateKind::Adt(def_id, variant_index, ..) => {
+                        match self.tcx.def_kind(def_id) {
+                            DefKind::Struct => (Some(target_idx), None),
+                            DefKind::Enum => (
+                                self.map.apply(target_idx, TrackElem::Variant(variant_index)),
+                                Some(variant_index),
+                            ),
+                            _ => return,
+                        }
+                    }
+                    _ => return,
+                };
+                if let Some(variant_target_idx) = variant_target {
+                    for (field_index, operand) in operands.iter().enumerate() {
+                        if let Some(field) = self.map().apply(
+                            variant_target_idx,
+                            TrackElem::Field(FieldIdx::from_usize(field_index)),
+                        ) {
+                            let result = self.handle_operand(operand, state);
+                            state.insert_idx(field, result, self.map());
+                        }
+                    }
+                }
+                if let Some(variant_index) = variant_index
+                    && let Some(discr_idx) = self.map().apply(target_idx, TrackElem::Discriminant)
+                {
+                    // We are assigning the discriminant as part of an aggregate.
+                    // This discriminant can only alias a variant field's value if the operand
+                    // had an invalid value for that type.
+                    // Using invalid values is UB, so we are allowed to perform the assignment
+                    // without extra flooding.
+                    let enum_ty = target.ty(self.local_decls, self.tcx).ty;
+                    if let Some(discr_val) = self.eval_discriminant(enum_ty, variant_index) {
+                        state.insert_value_idx(discr_idx, FlatSet::Elem(discr_val), &self.map);
+                    }
+                }
+            }
+            Rvalue::CheckedBinaryOp(op, box (left, right)) => {
+                // Flood everything now, so we can use `insert_value_idx` directly later.
+                state.flood(target.as_ref(), self.map());
+
+                let Some(target) = self.map().find(target.as_ref()) else { return };
+
+                let value_target = self.map().apply(target, TrackElem::Field(0_u32.into()));
+                let overflow_target = self.map().apply(target, TrackElem::Field(1_u32.into()));
+
+                if value_target.is_some() || overflow_target.is_some() {
+                    let (val, overflow) = self.binary_op(state, *op, left, right);
+
+                    if let Some(value_target) = value_target {
+                        // We have flooded `target` earlier.
+                        state.insert_value_idx(value_target, val, self.map());
+                    }
+                    if let Some(overflow_target) = overflow_target {
+                        let overflow = match overflow {
+                            FlatSet::Top => FlatSet::Top,
+                            FlatSet::Elem(overflow) => {
+                                self.wrap_scalar(Scalar::from_bool(overflow), self.tcx.types.bool)
+                            }
+                            FlatSet::Bottom => FlatSet::Bottom,
+                        };
+                        // We have flooded `target` earlier.
+                        state.insert_value_idx(overflow_target, overflow, self.map());
+                    }
+                }
+            }
+            _ => self.super_assign(target, rvalue, state),
+        }
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicStore__idx7982_rank1.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicStore__idx7982_rank1.rs", "c_api": "LLVMAtomicOrdering", "rust_api": "Ordering", "mapping_type": "type", "description": "Memory ordering enumeration", "reasoning": "[Task Analysis] C function wraps LLVM's atomic store creation, Rust function implements atomic store with ordering. [Similarity] Names don't match but both perform atomic store operations with ordering. [Knowledge Extraction] Found API mapping for atomic store with different ordering semantics, no full structural match due to domain mismatch (LLVM IR vs intrinsic operations)."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicStore__idx7982_rank1.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicStore__idx7982_rank1.rs", "c_api": "LLVMRustBuildAtomicStore", "rust_api": "atomic_store", "mapping_type": "function", "description": "Atomic store operation with memory ordering", "reasoning": "[Task Analysis] C function wraps LLVM's atomic store creation, Rust function implements atomic store with ordering. [Similarity] Names don't match but both perform atomic store operations with ordering. [Knowledge Extraction] Found API mapping for atomic store with different ordering semantics, no full structural match due to domain mismatch (LLVM IR vs intrinsic operations)."}]
+Unixcoder Score: -0.04920269176363945
+--------------------------------------------------

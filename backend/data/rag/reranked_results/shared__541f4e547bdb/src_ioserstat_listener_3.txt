@@ -1,0 +1,234 @@
+C_Code: 
+void HiSysEventRecycleWatcher(HiSysEventRustWatcherC* watcher)
+{
+    if (watcher == nullptr) {
+        return;
+    }
+    auto watcherKey = std::make_pair(watcher->onEventRustCb, watcher->onServiceDiedRustCb);
+    auto watcherIter = g_watchers.find(watcherKey);
+    if (watcherIter == g_watchers.end()) {
+        return;
+    }
+    auto listener = watcherIter->second;
+    if (listener != nullptr) {
+        listener->RecycleWatcher(watcher);
+    }
+    {
+        std::lock_guard<std::mutex> lock(g_watchersMutex);
+        g_watchers.erase(watcherIter->first);
+    }
+}
+Function: 
+pub fn add_watcher(watcher: &Watcher, watch_rules: &[WatchRule]) -> i32 {
+    sys_event_manager::add_watcher(watcher, watch_rules)
+}
+Unixcoder Score: 0.07264383137226105
+--------------------------------------------------
+C_Code: 
+void HiSysEventRecycleWatcher(HiSysEventRustWatcherC* watcher)
+{
+    if (watcher == nullptr) {
+        return;
+    }
+    auto watcherKey = std::make_pair(watcher->onEventRustCb, watcher->onServiceDiedRustCb);
+    auto watcherIter = g_watchers.find(watcherKey);
+    if (watcherIter == g_watchers.end()) {
+        return;
+    }
+    auto listener = watcherIter->second;
+    if (listener != nullptr) {
+        listener->RecycleWatcher(watcher);
+    }
+    {
+        std::lock_guard<std::mutex> lock(g_watchersMutex);
+        g_watchers.erase(watcherIter->first);
+    }
+}
+Function: 
+pub fn remove_watcher(watcher: &Watcher) -> i32 {
+    sys_event_manager::remove_watcher(watcher)
+}
+Unixcoder Score: 0.065390944480896
+--------------------------------------------------
+C_Code: 
+struct UdsListenerWrapper
+Function: 
+pub struct UdsListener {
+    state: Mutex<ChannelState>,
+}
+Unixcoder Score: 0.058612629771232605
+--------------------------------------------------
+C_Code: 
+int32_t InvokerListenThreadStub(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option, OnRemoteRequest func)
+{
+    (void)code;
+    (void)data;
+    (void)reply;
+    (void)option;
+    (void)func;
+    return ERR_NONE;
+}
+Function: 
+fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+        R::on_remote_request(self, code, data, reply)
+    }
+Unixcoder Score: 0.05592916160821915
+--------------------------------------------------
+C_Code: 
+void RequestManagerImpl::RestoreListener(void (*callback)())
+{
+    callback_ = callback;
+}
+Function: 
+pub(super) fn run(
+        request: DownloadRequest,
+        mut callback: PrimeCallback,
+    ) -> Arc<dyn CommonHandle> {
+        let url = match PercentEncoder::encode(request.url) {
+            Ok(url) => url,
+            Err(e) => {
+                callback.common_fail(e);
+                return Arc::new(CancelHandle::new(Arc::new(AtomicBool::new(false))));
+            }
+        };
+        callback.set_running();
+        let flag = Arc::new(AtomicBool::new(false));
+        let handle = Arc::new(CancelHandle::new(flag.clone()));
+        let mut headers = None;
+        if let Some(h) = request.headers {
+            headers = Some(
+                h.iter()
+                    .map(|a| (a.0.to_string(), a.1.to_string()))
+                    .collect(),
+            );
+        }
+        ylong_runtime::spawn(async move {
+            if let Err(e) = download(url, headers, &mut callback, flag).await {
+                if e.error_kind() == ErrorKind::UserAborted {
+                    callback.common_cancel();
+                } else {
+                    callback.common_fail(e);
+                }
+            }
+        });
+        handle
+    }
+Unixcoder Score: 0.04806492105126381
+--------------------------------------------------
+C_Code: 
+int32_t InvokerListenThreadStub(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option, OnRemoteRequest func)
+{
+    (void)code;
+    (void)data;
+    (void)reply;
+    (void)option;
+    (void)func;
+    return ERR_NONE;
+}
+Function: 
+fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+            0
+        }
+Unixcoder Score: 0.04574624449014664
+--------------------------------------------------
+C_Code: 
+struct UdsListenerWrapper
+Function: 
+struct Response {
+        taskId: String,
+        version: String,
+        statusCode: i32,
+        reason: String,
+        headers: Vec<String>,
+    }
+Unixcoder Score: 0.04416666924953461
+--------------------------------------------------
+C_Code: 
+void RequestManagerImpl::RestoreListener(void (*callback)())
+{
+    callback_ = callback;
+}
+Function: 
+fn poll_progress(
+        self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+        downloaded: u64,
+        total: Option<u64>,
+    ) -> Poll<Result<(), HttpClientError>> {
+        let me = self.get_mut();
+        me.callback
+            .common_progress(total.unwrap_or_default(), downloaded, 0, 0);
+        if me.abort_flag.load(Ordering::Acquire) {
+            Poll::Ready(Err(HttpClientError::user_aborted()))
+        } else {
+            Poll::Ready(Ok(()))
+        }
+    }
+Unixcoder Score: 0.04311833903193474
+--------------------------------------------------
+C_Code: 
+void RequestManagerImpl::RestoreListener(void (*callback)())
+{
+    callback_ = callback;
+}
+Function: 
+pub(super) fn run(
+        request: DownloadRequest,
+        mut callback: PrimeCallback,
+    ) -> Arc<dyn CommonHandle> {
+        let url = match PercentEncoder::encode(request.url) {
+            Ok(url) => url,
+            Err(e) => {
+                callback.common_fail(e);
+                return Arc::new(CancelHandle::new(Arc::new(AtomicBool::new(false))));
+            }
+        };
+        callback.set_running();
+        let flag = Arc::new(AtomicBool::new(false));
+        let handle = Arc::new(CancelHandle::new(flag.clone()));
+        let mut headers = None;
+        if let Some(h) = request.headers {
+            headers = Some(
+                h.iter()
+                    .map(|a| (a.0.to_string(), a.1.to_string()))
+                    .collect(),
+            );
+        }
+        ylong_runtime::spawn(async move {
+            if let Err(e) = download(url, headers, &mut callback, flag).await {
+                if e.error_kind() == ErrorKind::UserAborted {
+                    callback.common_cancel();
+                } else {
+                    callback.common_fail(e);
+                }
+            }
+        });
+        handle
+    }
+Unixcoder Score: 0.03890276700258255
+--------------------------------------------------
+C_Code: 
+int32_t InvokerListenThreadStub(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option, OnRemoteRequest func)
+{
+    (void)code;
+    (void)data;
+    (void)reply;
+    (void)option;
+    (void)func;
+    return ERR_NONE;
+}
+Function: 
+pub fn on_remote_request(
+        &mut self,
+        code: u32,
+        data: Pin<&mut MessageParcel>,
+        reply: Pin<&mut MessageParcel>,
+    ) -> i32 {
+        unsafe {
+            let mut data = MsgParcel::from_ptr(data.get_unchecked_mut() as *mut MessageParcel);
+            let mut reply = MsgParcel::from_ptr(reply.get_unchecked_mut() as *mut MessageParcel);
+            self.inner.on_remote_request(code, &mut data, &mut reply)
+        }
+    }
+Unixcoder Score: 0.028956899419426918
+--------------------------------------------------

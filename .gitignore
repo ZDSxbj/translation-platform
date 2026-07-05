@@ -9,6 +9,11 @@ __pycache__/
 *.key
 
 # ============================================================
+# Project documentation (generated per-session by Claude Code)
+# ============================================================
+CLAUDE.md
+
+# ============================================================
 # Backend — Uploads & Outputs (runtime artifacts)
 # ============================================================
 backend/uploads/
@@ -61,3 +66,6 @@ Thumbs.db
 *.bak
 tmp/
 backend/app/engines/his2trans/framework/.cache/
+# Runtime output (root-level)
+outputs/
+uploads/

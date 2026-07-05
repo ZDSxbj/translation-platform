@@ -361,6 +361,10 @@ class Claude():
                     "top_k": VLLM_SAMPLING_PARAMS.get("top_k"),
                     "repetition_penalty": VLLM_SAMPLING_PARAMS.get("repetition_penalty")
                 }
+                # Disable reasoning/thinking mode for DeepSeek v4 models to avoid
+                # slow responses and truncated output.  Other models ignore this.
+                if "deepseek-v4" in str(self.model_name).lower():
+                    extra_body_params["thinking"] = {"type": "disabled"}
 
                 last_err = None
                 for attempt in range(1, max(1, VLLM_MAX_RETRIES) + 1):
@@ -426,6 +430,9 @@ class Claude():
                     if self.top_p is not None:
                         kwargs["top_p"] = self.top_p
 
+                    # Disable reasoning/thinking for DeepSeek v4 models
+                    if "deepseek-v4" in str(self.model_name).lower():
+                        kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
                     # 使用 **kwargs 解包参数发送请求
                     _vllm_semaphore.acquire()
                     try:

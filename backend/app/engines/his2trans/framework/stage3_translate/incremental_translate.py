@@ -57,7 +57,7 @@ def _atomic_write_text(path: Path, text: str) -> None:
         except FileNotFoundError:
             pass
 
-from tree_sitter import Language, Parser
+from tree_sitter import Language, Parser, Query, QueryCursor
 import tree_sitter_cpp as tscpp
 try:
     import tree_sitter_rust as tsrust  # type: ignore
@@ -267,6 +267,22 @@ else:
     rust_parser = None
 
 
+def _query_captures_compat(query, root_node):
+    """Compat wrapper: tree_sitter >=0.25 removed Query.captures().
+
+    Returns a normalized list of (node, capture_name_str) tuples.
+    """
+    cursor = QueryCursor(query)
+    captures = cursor.captures(root_node)
+    if isinstance(captures, dict):
+        out = []
+        for cap_name, nodes in captures.items():
+            for node in nodes:
+                out.append((node, cap_name))
+        return out
+    return captures or []
+
+
 @dataclass
 class FunctionInfo:
     """函数信息"""
@@ -410,14 +426,14 @@ class CallGraphAnalyzer:
             tree = cpp_parser.parse(bytes(c_code, "utf-8"))
 
             # 查找函数定义：捕获 function_declarator 的 declarator 根节点，然后剥离到 identifier。
-            query = CPP_LANGUAGE.query(
+            query = Query(CPP_LANGUAGE, 
                 """
                 (function_definition
                     declarator: (function_declarator
                         declarator: (_) @decl))
                 """
             )
-            for node, capture_name in query.captures(tree.root_node):
+            for node, capture_name in _query_captures_compat(query, tree.root_node):
                 if capture_name != "decl":
                     continue
                 ident = _unwrap_to_identifier(node)
@@ -1451,8 +1467,8 @@ class IncrementalTranslator:
 
         # Collect function_definition nodes.
         try:
-            q = CPP_LANGUAGE.query("(function_definition) @fn")
-            captured = q.captures(tree.root_node)
+            q = Query(CPP_LANGUAGE, "(function_definition) @fn")
+            captured = _query_captures_compat(q, tree.root_node)
             fn_nodes = [n for (n, cap) in captured if cap == "fn"]
         except Exception:
             fn_nodes = []
@@ -2174,6 +2190,29 @@ unsafe {
                 return {p.stem for p in sig_files}
         except Exception as e:
             logger.debug(f"读取签名匹配目录失败，跳过过滤: {e}")
+
+        # 3) 回退：从 functions_manifest.json 获取项目自有函数
+        #    （排除头文件内联的辅助函数如 DListHeadInit 等）
+        try:
+            import json as _json
+            manifest_candidates = [
+                self.functions_dir.parent / "functions_manifest.json",
+                self.dependencies_dir.parent / "functions_manifest.json",
+            ]
+            for mp in manifest_candidates:
+                if mp.is_file():
+                    mf = _json.loads(mp.read_text(encoding="utf-8"))
+                    func_files = {f["func_file"].replace(".txt", "")
+                                  for f in mf.get("functions", [])
+                                  if f.get("func_file")}
+                    if func_files:
+                        logger.info(
+                            "[target_select] 从 manifest 获取目标函数: "
+                            f"{len(func_files)} 个")
+                        return func_files
+                    break
+        except Exception as e:
+            logger.debug(f"从 manifest 读取目标函数失败: {e}")
 
         return None
     
@@ -7028,14 +7067,14 @@ unsafe {
         try:
             content_bytes = code.encode("utf-8")
             tree = rust_parser.parse(content_bytes)
-            query = RUST_LANGUAGE.query(
+            query = Query(RUST_LANGUAGE, 
                 """
                 (function_item
                     name: (identifier) @name
                 )
                 """
             )
-            captures = query.captures(tree.root_node)
+            captures = _query_captures_compat(query, tree.root_node)
             target_node = None
             for node, cap in captures:
                 if cap != "name":
@@ -7791,14 +7830,14 @@ unsafe {
             
             # 查询 struct、enum、type alias 和 const
             # 注意：必须包含 const_item，否则 types.rs 中的常量定义会被截断
-            query = RUST_LANGUAGE.query("""
+            query = Query(RUST_LANGUAGE, """
                 (struct_item) @struct
                 (enum_item) @enum
                 (type_item) @type
                 (const_item) @const
             """)
             
-            captures = query.captures(tree.root_node)
+            captures = _query_captures_compat(query, tree.root_node)
             for node, _ in captures:
                 # 提取完整的定义，确保不被截断
                 definition = code[node.start_byte:node.end_byte].strip()
@@ -7831,14 +7870,14 @@ unsafe {
         try:
             tree = rust_parser.parse(bytes(code, 'utf-8'))
 
-            query = RUST_LANGUAGE.query("""
+            query = Query(RUST_LANGUAGE, """
                 (type_item
                     name: (type_identifier) @type_name
                     type: (_) @type_value
                 )
             """)
 
-            captures = query.captures(tree.root_node)
+            captures = _query_captures_compat(query, tree.root_node)
             type_name = None
 
             for node, capture_name in captures:
@@ -7887,7 +7926,7 @@ unsafe {
         try:
             tree = rust_parser.parse(bytes(code, 'utf-8'))
             
-            query = RUST_LANGUAGE.query("""
+            query = Query(RUST_LANGUAGE, """
                 (function_item
                     name: (identifier) @name
                     parameters: (parameters) @params
@@ -7895,7 +7934,7 @@ unsafe {
                 ) @func
             """)
             
-            captures = query.captures(tree.root_node)
+            captures = _query_captures_compat(query, tree.root_node)
             for node, capture_name in captures:
                 if capture_name == 'func':
                     # 提取签名部分（到 { 之前）
@@ -7933,13 +7972,13 @@ unsafe {
             tree = rust_parser.parse(bytes(code, 'utf-8'))
             
             # 查询所有函数定义
-            query = RUST_LANGUAGE.query("""
+            query = Query(RUST_LANGUAGE, """
                 (function_item
                     name: (identifier) @func_name
                 ) @func_def
             """)
             
-            captures = query.captures(tree.root_node)
+            captures = _query_captures_compat(query, tree.root_node)
             
             # 从 C 代码中提取实际函数名
             actual_func_name = func_info.name
@@ -12526,7 +12565,7 @@ Output format (Rust comment):
                 tree = rust_parser.parse(bytes(code, 'utf-8'))
                 
                 # 查找所有 impl 块中的方法
-                query = RUST_LANGUAGE.query("""
+                query = Query(RUST_LANGUAGE, """
                     (impl_item
                         (type_identifier) @trait_name
                         (declaration_list
@@ -12538,7 +12577,7 @@ Output format (Rust comment):
                     )
                 """)
                 
-                captures = query.captures(tree.root_node)
+                captures = _query_captures_compat(query, tree.root_node)
                 method_info = {}  # method_name -> (body_node, trait_name)
                 
                 for node, capture_name in captures:
@@ -12576,7 +12615,7 @@ Output format (Rust comment):
                         break
 
                     # 重新查找所有 unimplemented!() 的 trait 方法
-                    impl_query = RUST_LANGUAGE.query("""
+                    impl_query = Query(RUST_LANGUAGE, """
                         (impl_item
                             (declaration_list
                                 (function_item
@@ -12587,7 +12626,7 @@ Output format (Rust comment):
                         )
                     """)
                     
-                    impl_captures = impl_query.captures(current_tree.root_node)
+                    impl_captures = _query_captures_compat(impl_query, current_tree.root_node)
                     current_methods = {}  # method_name -> body_node
                     
                     for node, capture_name in impl_captures:
@@ -12610,13 +12649,13 @@ Output format (Rust comment):
                         break  # 没有更多需要处理的方法
                     
                     # 查找对应的独立函数
-                    standalone_query = RUST_LANGUAGE.query("""
+                    standalone_query = Query(RUST_LANGUAGE, """
                         (function_item
                             name: (identifier) @func_name
                         ) @func_def
                     """)
                     
-                    standalone_captures = standalone_query.captures(current_tree.root_node)
+                    standalone_captures = _query_captures_compat(standalone_query, current_tree.root_node)
                     found_standalone = False
                     
                     for method_name, body_node in current_methods.items():

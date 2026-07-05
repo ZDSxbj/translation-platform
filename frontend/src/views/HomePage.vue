@@ -127,7 +127,7 @@ const analysisResult = ref(null)
 const selectedSourceFile = ref(null)
 const config = ref({
   engine: 'his2trans',
-  model: 'deepseek-v3.2',
+  model: 'deepseek-chat',
   use_rag: false,
   max_repair: 3,
   ohos_root: '',

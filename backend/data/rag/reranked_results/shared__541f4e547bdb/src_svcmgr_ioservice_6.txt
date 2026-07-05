@@ -1,0 +1,271 @@
+C_Code: 
+void Request::OnFaultsReceive(const std::shared_ptr<int32_t> &tid, const std::shared_ptr<SubscribeType> &type,
+    const std::shared_ptr<Reason> &reason)
+{
+    std::lock_guard<std::mutex> lock(listenerMutex_);
+    auto listener = notifyDataListenerMap_.find(*type);
+    if (listener != notifyDataListenerMap_.end()) {
+        listener->second->OnFaultsReceive(tid, type, reason);
+    }
+}
+Function: 
+pub(crate) fn faults(tid: u32, client_manager: &ClientManagerEntry, reason: Reason) {
+        client_manager.send_faults(tid, SubscribeType::FaultOccur, reason)
+    }
+Unixcoder Score: 0.01589348167181015
+--------------------------------------------------
+C_Code: 
+void ListenAbility::OnStart()
+{
+    HiLog::Info(LABEL, "OnStart()");
+    bool res = Publish(this);
+    if (!res) {
+        HiLog::Error(LABEL, "publish failed!");
+        return;
+    }
+    HiLog::Info(LABEL, "%{public}s called:AddAbilityListener begin!", __func__);
+    AddSystemAbilityListener(DISTRIBUTED_SCHED_SA_ID);
+    AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
+    AddSystemAbilityListener(RES_SCHED_SYS_ABILITY_ID);
+    AddSystemAbilityListener(BACKGROUND_TASK_MANAGER_SERVICE_ID);
+    HiLog::Info(LABEL, "%{public}s called:AddAbilityListener end!", __func__);
+}
+Function: 
+fn on_start(&self, handler: system_ability_fwk::ability::Handler) {
+        handler.publish(ListenService::new(self.watch.clone()));
+    }
+Unixcoder Score: 0.003656343324109912
+--------------------------------------------------
+C_Code: 
+int32_t ISystemAbilityManagerMock::UnSubscribeSystemAbility(int32_t systemAbilityId,
+    const sptr<ISystemAbilityStatusChange>& listener)
+{
+    return 0;
+}
+Function: 
+pub fn remove_system_ability(said: i32) -> i32 {
+        info!("remove system ability {}", said);
+        RemoveSystemAbility(said)
+    }
+Unixcoder Score: 0.0032463271636515856
+--------------------------------------------------
+C_Code: 
+void TestAudioAbility::OnStart()
+{
+    HiLog::Info(label_, "%{public}s called", __func__);
+    bool res = Publish(this);
+    if (res == false) {
+        HiLog::Error(label_, "%{public}s:fail to onstart res = %{public}d", __func__, res);
+    }
+    AddSystemAbilityListener(DISTRIBUTED_SCHED_SA_ID);
+    AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
+    AddSystemAbilityListener(RES_SCHED_SYS_ABILITY_ID);
+    AddSystemAbilityListener(BACKGROUND_TASK_MANAGER_SERVICE_ID);
+    return;
+}
+Function: 
+fn on_start_with_reason(
+        &self,
+        reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason,
+        handler: system_ability_fwk::ability::Handler,
+    ) {
+        handler.add_system_ability_listen(TEST_LISTEN_ID);
+        self.handler.write().unwrap().replace(handler.clone());
+        self.watch.lock().unwrap().start_reason = Some(reason);
+        assert!(handler.publish(AudioService::new(handler.clone(), self.watch.clone())));
+    }
+Unixcoder Score: 0.003059421433135867
+--------------------------------------------------
+C_Code: 
+sptr<IRemoteObject> IPCProcessSkeleton::GetSAMgrObject()
+{
+    if (g_interface == nullptr) {
+        return nullptr;
+    }
+    return GetDBinderCallbackStubInterface()->GetSAMgrObject();
+}
+Function: 
+pub unsafe fn from_ciremote(remote: *mut IRemoteObject) -> Option<Self> {
+        if remote.is_null() {
+            return None;
+        }
+
+        let inner = FromCIRemoteObject(remote);
+        if inner.is_null() {
+            return None;
+        }
+
+        Some(Self { inner })
+    }
+Unixcoder Score: 0.0010416638106107712
+--------------------------------------------------
+C_Code: 
+void ListenAbility::OnStart()
+{
+    HiLog::Info(LABEL, "OnStart()");
+    bool res = Publish(this);
+    if (!res) {
+        HiLog::Error(LABEL, "publish failed!");
+        return;
+    }
+    HiLog::Info(LABEL, "%{public}s called:AddAbilityListener begin!", __func__);
+    AddSystemAbilityListener(DISTRIBUTED_SCHED_SA_ID);
+    AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
+    AddSystemAbilityListener(RES_SCHED_SYS_ABILITY_ID);
+    AddSystemAbilityListener(BACKGROUND_TASK_MANAGER_SERVICE_ID);
+    HiLog::Info(LABEL, "%{public}s called:AddAbilityListener end!", __func__);
+}
+Function: 
+fn on_start(&self, handler: system_ability_fwk::ability::Handler) {
+        handler.publish(ListenService::new(self.watch.clone()));
+    }
+Unixcoder Score: 0.0008934255456551909
+--------------------------------------------------
+C_Code: 
+void TestAudioAbility::OnStart()
+{
+    HiLog::Info(label_, "%{public}s called", __func__);
+    bool res = Publish(this);
+    if (res == false) {
+        HiLog::Error(label_, "%{public}s:fail to onstart res = %{public}d", __func__, res);
+    }
+    AddSystemAbilityListener(DISTRIBUTED_SCHED_SA_ID);
+    AddSystemAbilityListener(SOFTBUS_SERVER_SA_ID);
+    AddSystemAbilityListener(RES_SCHED_SYS_ABILITY_ID);
+    AddSystemAbilityListener(BACKGROUND_TASK_MANAGER_SERVICE_ID);
+    return;
+}
+Function: 
+fn on_start_with_reason(
+        &self,
+        reason: system_ability_fwk::cxx_share::SystemAbilityOnDemandReason,
+        handler: system_ability_fwk::ability::Handler,
+    ) {
+        handler.add_system_ability_listen(TEST_LISTEN_ID);
+        self.handler.write().unwrap().replace(handler.clone());
+        self.watch.lock().unwrap().start_reason = Some(reason);
+        assert!(handler.publish(AudioService::new(handler.clone(), self.watch.clone())));
+    }
+Unixcoder Score: 0.00015361772966571152
+--------------------------------------------------
+C_Code: 
+void SystemAbilityManager::NotifySystemAbilityChanged(int32_t systemAbilityId, const std::string& deviceId,
+    int32_t code, const sptr<ISystemAbilityStatusChange>& listener)
+{
+    HILOGD("NotifySystemAbilityChanged, SA:%{public}d", systemAbilityId);
+    if (listener == nullptr) {
+        HILOGE("%{public}s listener null pointer!", __func__);
+        return;
+    }
+
+    switch (code) {
+        case static_cast<uint32_t>(SamgrInterfaceCode::ADD_SYSTEM_ABILITY_TRANSACTION): {
+            listener->OnAddSystemAbility(systemAbilityId, deviceId);
+            break;
+        }
+        case static_cast<uint32_t>(SamgrInterfaceCode::REMOVE_SYSTEM_ABILITY_TRANSACTION): {
+            listener->OnRemoveSystemAbility(systemAbilityId, deviceId);
+            break;
+        }
+        default:
+            break;
+    }
+}
+Function: 
+pub fn subscribe_system_ability(
+        said: i32,
+        on_add: fn(i32, &str),
+        on_remove: fn(i32, &str),
+    ) -> UnsubscribeHandler {
+        debug!("subscribe system ability {}", said);
+        UnsubscribeHandler::new(Unsubscribe::Ability(SubscribeSystemAbility(
+            said, on_add, on_remove,
+        )))
+    }
+Unixcoder Score: -0.003444457659497857
+--------------------------------------------------
+C_Code: 
+static void AnonymousTest(void)
+{
+    IpcIo anonymous;
+    uint8_t anonymousData[IPC_MAX_SIZE];
+    IpcIoInit(&anonymous, anonymousData, IPC_MAX_SIZE, 1);
+    WriteRemoteObject(&anonymous, &g_clientSvc);
+
+    IpcIo anonymousreply;
+    uintptr_t anonymousptr = 0;
+    int ret = SendRequest(g_serverSid, SERVER_OP_ADD_SERVICE, &anonymous, &anonymousreply, g_option, &anonymousptr);
+    int res = -1;
+    ReadInt32(&anonymousreply, &res);
+    RPC_LOG_INFO("add self to server = %d", res);
+    FreeBuffer((void *)anonymousptr);
+    EXPECT_EQ(ret, ERR_NONE);
+    EXPECT_EQ(res, ERR_NONE);
+}
+Function: 
+pub fn add_service(service: &RemoteObj, said: i32)
+{
+    let samgr = get_samgr().expect("samgr is not null");
+    let mut data = MsgParcel::new().expect("MsgParcel is not null");
+    match data.write(&InterFaceToken::new("ohos.samgr.accessToken")) {
+        Ok(()) => { println!("write token success") }
+        Err(val) => { println!("write token fail: {}", val) }
+    }
+    match data.write(&said) {
+        Ok(()) => { println!("write said success") }
+        Err(val) => { println!("write said fail: {}", val) }
+    }
+    match data.write(service) {
+        Ok(()) => { println!("write service success") }
+        Err(val) => { println!("write service fail: {}", val) }
+    }
+    match data.write(&false) {
+        Ok(()) => { println!("write bool success") }
+        Err(val) => { println!("write bool fail: {}", val) }
+    }
+    match data.write(&0) {
+        Ok(()) => { println!("write 0 success") }
+        Err(val) => { println!("write 0 fail: {}", val) }
+    }
+    match data.write(&String16::new("")) {
+        Ok(()) => { println!("write string16 111 success") }
+        Err(val) => { println!("write string16 111 fail: {}", val) }
+    }
+    match data.write(&String16::new("")) {
+        Ok(()) => { println!("write string16 222 success") }
+        Err(val) => { println!("write string16 222 fail: {}", val) }
+    }
+    let reply = samgr.send_request(3, &data, false).expect("failed to register service");
+    let replyValue: i32 = reply.read().expect("register service reply should 0");
+    println!("register service result: {}", replyValue);
+}
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustGetSMDiagnostic__idx18110_rank2.c", "source_rust_file": "API_Mapping__LLVMRustGetSMDiagnostic__idx18110_rank2.rs", "c_api": "SM->getLocCookie()", "rust_api": "&mut loc", "mapping_type": "pattern", "description": "Extract location cookie for diagnostic", "reasoning": "[Filter 1: Entity Name Check] -> Names do not refer to the same concept (LLVMRustGetSMDiagnostic vs unpack). [Filter 2: Empty/Trivial Code] -> Neither side is empty. [Filter 3: FFI Wrapper] -> Not a pure FFI wrapper. [Filter 4: Semantic Domain Mismatch] -> C function is about extracting diagnostic info from LLVM, Rust function is about unpacking and building diagnostics; domains are related but not semantically identical. [Filter 5: Empty Structs] -> Not applicable. [Filter 6: Definition vs Usage Asymmetry] -> Both are function definitions, not calls. [Task Analysis] -> C function extracts diagnostic data, Rust function unpacks and builds diagnostic data. [Similarity] -> No full structural match due to domain mismatch and different logic flow. [Knowledge Extraction] -> Extract API mappings based on similar operations (diagnostic handling)."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustGetSMDiagnostic__idx18110_rank2.c", "source_rust_file": "API_Mapping__LLVMRustGetSMDiagnostic__idx18110_rank2.rs", "c_api": "LLVMRustGetSMDiagnostic", "rust_api": "super::LLVMRustUnpackSMDiagnostic", "mapping_type": "function", "description": "Diagnostic data extraction and unpacking", "reasoning": "[Filter 1: Entity Name Check] -> Names do not refer to the same concept (LLVMRustGetSMDiagnostic vs unpack). [Filter 2: Empty/Trivial Code] -> Neither side is empty. [Filter 3: FFI Wrapper] -> Not a pure FFI wrapper. [Filter 4: Semantic Domain Mismatch] -> C function is about extracting diagnostic info from LLVM, Rust function is about unpacking and building diagnostics; domains are related but not semantically identical. [Filter 5: Empty Structs] -> Not applicable. [Filter 6: Definition vs Usage Asymmetry] -> Both are function definitions, not calls. [Task Analysis] -> C function extracts diagnostic data, Rust function unpacks and builds diagnostic data. [Similarity] -> No full structural match due to domain mismatch and different logic flow. [Knowledge Extraction] -> Extract API mappings based on similar operations (diagnostic handling)."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustGetSMDiagnostic__idx18110_rank2.c", "source_rust_file": "API_Mapping__LLVMRustGetSMDiagnostic__idx18110_rank2.rs", "c_api": "wrap(&SM->getSMDiag())", "rust_api": "diag", "mapping_type": "pattern", "description": "Wrap diagnostic info for return", "reasoning": "[Filter 1: Entity Name Check] -> Names do not refer to the same concept (LLVMRustGetSMDiagnostic vs unpack). [Filter 2: Empty/Trivial Code] -> Neither side is empty. [Filter 3: FFI Wrapper] -> Not a pure FFI wrapper. [Filter 4: Semantic Domain Mismatch] -> C function is about extracting diagnostic info from LLVM, Rust function is about unpacking and building diagnostics; domains are related but not semantically identical. [Filter 5: Empty Structs] -> Not applicable. [Filter 6: Definition vs Usage Asymmetry] -> Both are function definitions, not calls. [Task Analysis] -> C function extracts diagnostic data, Rust function unpacks and builds diagnostic data. [Similarity] -> No full structural match due to domain mismatch and different logic flow. [Knowledge Extraction] -> Extract API mappings based on similar operations (diagnostic handling)."}]
+Unixcoder Score: -0.007108695805072784
+--------------------------------------------------
+C_Code: 
+void HiSysEventRecycleWatcher(HiSysEventRustWatcherC* watcher)
+{
+    if (watcher == nullptr) {
+        return;
+    }
+    auto watcherKey = std::make_pair(watcher->onEventRustCb, watcher->onServiceDiedRustCb);
+    auto watcherIter = g_watchers.find(watcherKey);
+    if (watcherIter == g_watchers.end()) {
+        return;
+    }
+    auto listener = watcherIter->second;
+    if (listener != nullptr) {
+        listener->RecycleWatcher(watcher);
+    }
+    {
+        std::lock_guard<std::mutex> lock(g_watchersMutex);
+        g_watchers.erase(watcherIter->first);
+    }
+}
+Function: 
+pub fn remove_watcher(watcher: &Watcher) -> i32 {
+    sys_event_manager::remove_watcher(watcher)
+}
+Unixcoder Score: -0.009802556596696377
+--------------------------------------------------

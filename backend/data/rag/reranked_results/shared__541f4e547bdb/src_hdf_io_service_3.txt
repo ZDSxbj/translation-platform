@@ -1,0 +1,138 @@
+C_Code: 
+struct RemoteServiceStub
+Function: 
+pub struct AbilityStub {
+    remote: RemoteStubWrapper,
+}
+Unixcoder Score: 0.10491631180047989
+--------------------------------------------------
+C_Code: 
+struct RemoteServiceStub
+Function: 
+pub struct AbilityStub {
+    inner: Box<dyn RemoteStub>,
+}
+Unixcoder Score: 0.10176679491996765
+--------------------------------------------------
+C_Code: 
+struct RemoteServiceStub
+Function: 
+pub struct SystemAbility {
+    inner: UniquePtr<SystemAbilityWrapper>,
+}
+Unixcoder Score: 0.09628954529762268
+--------------------------------------------------
+C_Code: 
+struct CacheDownloadService
+Function: 
+pub struct RustData {
+    data: Arc<RamCache>,
+}
+Unixcoder Score: 0.03327590227127075
+--------------------------------------------------
+C_Code: 
+struct CacheDownloadService
+Function: 
+pub(crate) struct PrimeCallback {
+    task_id: TaskId,
+    finish: Arc<AtomicBool>,
+    state: Arc<AtomicUsize>,
+    cache_handle: Updater,
+    callbacks: Arc<Mutex<VecDeque<Box<dyn PreloadCallback>>>>,
+    progress_restriction: ProgressRestriction,
+    seq: usize,
+}
+Unixcoder Score: 0.029553832486271858
+--------------------------------------------------
+C_Code: 
+struct CacheDownloadService
+Function: 
+pub struct CacheDownloadService {
+    running_tasks: Mutex<HashMap<TaskId, Arc<Mutex<DownloadTask>>>>,
+    cache_manager: CacheManager,
+    info_mgr: Arc<DownloadInfoMgr>,
+    net_registrar: NetRegistrar,
+}
+Unixcoder Score: 0.023880578577518463
+--------------------------------------------------
+C_Code: 
+struct CacheDownloadService
+Function: 
+pub struct RustDownloadInfo {
+    info: DownloadInfo,
+}
+Unixcoder Score: 0.013210579752922058
+--------------------------------------------------
+C_Code: 
+sptr<IFoo> TestServiceProxy::TestGetFooService()
+{
+    MessageOption option;
+    MessageParcel dataParcel;
+    MessageParcel replyParcel;
+    Remote()->SendRequest(TRANS_ID_GET_FOO_SERVICE, dataParcel, replyParcel, option);
+    auto rep = replyParcel.ReadRemoteObject();
+    if (rep == nullptr) {
+        ZLOGE(LABEL, "null foo service");
+        return nullptr;
+    }
+    return iface_cast<IFoo>(rep);
+}
+Function: 
+fn parcel_remote_primitive(data: &mut MsgParcel, reply: &mut MsgParcel) {
+    reply
+        .write_interface_token(data.read_interface_token().unwrap().as_str())
+        .unwrap();
+    let w = data.read_buffer(TEST_LEN).unwrap();
+    reply.write_buffer(&w);
+
+    reply.write_file(data.read_file().unwrap());
+
+    reply.write(&data.read::<bool>().unwrap());
+    reply.write(&data.read::<bool>().unwrap());
+    reply.write(&data.read::<i8>().unwrap());
+    reply.write(&data.read::<i8>().unwrap());
+    reply.write(&data.read::<i16>().unwrap());
+    reply.write(&data.read::<i16>().unwrap());
+    reply.write(&data.read::<i32>().unwrap());
+    reply.write(&data.read::<i32>().unwrap());
+    reply.write(&data.read::<i64>().unwrap());
+    reply.write(&data.read::<i64>().unwrap());
+
+    reply.write(&data.read::<u8>().unwrap());
+    reply.write(&data.read::<u8>().unwrap());
+    reply.write(&data.read::<u16>().unwrap());
+    reply.write(&data.read::<u16>().unwrap());
+    reply.write(&data.read::<u32>().unwrap());
+    reply.write(&data.read::<u32>().unwrap());
+    reply.write(&data.read::<u64>().unwrap());
+    reply.write(&data.read::<u64>().unwrap());
+
+    reply.write(&data.read::<usize>().unwrap());
+    reply.write(&data.read::<usize>().unwrap());
+}
+Unixcoder Score: 0.012686576694250107
+--------------------------------------------------
+C_Code: 
+RemoteServiceStub::RemoteServiceStub(RemoteStubWrapper *ability, std::u16string descriptor) : IPCObjectStub(descriptor)
+{
+    this->inner_ = ability;
+}
+Function: 
+pub fn new<A: RemoteStub + 'static>(remote: A) -> Self {
+        Self {
+            inner: Box::new(remote),
+        }
+    }
+Unixcoder Score: 0.010523151606321335
+--------------------------------------------------
+C_Code: 
+RemoteServiceStub::RemoteServiceStub(RemoteStubWrapper *ability, std::u16string descriptor) : IPCObjectStub(descriptor)
+{
+    this->inner_ = ability;
+}
+Function: 
+pub fn from_stub<T: RemoteStub + 'static>(stub: T) -> Option<Self> {
+        RemoteStubWrapper::new(stub).into_remote()
+    }
+Unixcoder Score: 0.005878879223018885
+--------------------------------------------------

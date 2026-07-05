@@ -255,6 +255,7 @@ class LLMSignatureRefiner:
 
             refined = f"{expected_prefix_for_output} {fn_rest}" if expected_prefix_for_output else fn_rest
             refined = _collapse_ws(refined)
+            refined = refined.replace("`", "")  # strip LLM markdown backtick artifacts
 
             # Sanity: must contain "fn <name>("
             if not re.search(rf"\bfn\s+{re.escape(func_name)}\s*\(", refined):

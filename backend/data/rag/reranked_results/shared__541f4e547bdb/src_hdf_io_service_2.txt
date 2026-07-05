@@ -1,0 +1,133 @@
+C_Code: 
+void HiSysEventRecycleWatcher(HiSysEventRustWatcherC* watcher)
+{
+    if (watcher == nullptr) {
+        return;
+    }
+    auto watcherKey = std::make_pair(watcher->onEventRustCb, watcher->onServiceDiedRustCb);
+    auto watcherIter = g_watchers.find(watcherKey);
+    if (watcherIter == g_watchers.end()) {
+        return;
+    }
+    auto listener = watcherIter->second;
+    if (listener != nullptr) {
+        listener->RecycleWatcher(watcher);
+    }
+    {
+        std::lock_guard<std::mutex> lock(g_watchersMutex);
+        g_watchers.erase(watcherIter->first);
+    }
+}
+Function: 
+pub fn add_watcher(watcher: &Watcher, watch_rules: &[WatchRule]) -> i32 {
+    sys_event_manager::add_watcher(watcher, watch_rules)
+}
+Unixcoder Score: 0.06079253926873207
+--------------------------------------------------
+C_Code: 
+void HiSysEventRecycleWatcher(HiSysEventRustWatcherC* watcher)
+{
+    if (watcher == nullptr) {
+        return;
+    }
+    auto watcherKey = std::make_pair(watcher->onEventRustCb, watcher->onServiceDiedRustCb);
+    auto watcherIter = g_watchers.find(watcherKey);
+    if (watcherIter == g_watchers.end()) {
+        return;
+    }
+    auto listener = watcherIter->second;
+    if (listener != nullptr) {
+        listener->RecycleWatcher(watcher);
+    }
+    {
+        std::lock_guard<std::mutex> lock(g_watchersMutex);
+        g_watchers.erase(watcherIter->first);
+    }
+}
+Function: 
+pub fn remove_watcher(watcher: &Watcher) -> i32 {
+    sys_event_manager::remove_watcher(watcher)
+}
+Unixcoder Score: 0.05894080922007561
+--------------------------------------------------
+C_Code: 
+struct upb_ServiceDef
+Function: 
+pub struct SerializedData {
+    /// Owns the memory.
+    data: NonNull<u8>,
+    len: usize,
+}
+Unixcoder Score: 0.04580438509583473
+--------------------------------------------------
+C_Code: 
+struct CacheDownloadService
+Function: 
+pub struct RustDownloadInfo {
+    info: DownloadInfo,
+}
+Unixcoder Score: 0.04561370983719826
+--------------------------------------------------
+C_Code: 
+struct google_protobuf_ServiceOptions { upb_Message UPB_PRIVATE(base); }
+Function: 
+pub struct CodeGen {
+    inputs: Vec<PathBuf>,
+    output_dir: PathBuf,
+    protoc_path: PathBuf,
+    protoc_gen_upb_path: PathBuf,
+    protoc_gen_upb_minitable_path: PathBuf,
+    includes: Vec<PathBuf>,
+}
+Unixcoder Score: 0.03556187078356743
+--------------------------------------------------
+C_Code: 
+struct RemoteServiceStub
+Function: 
+pub struct UnsubscribeHandler {
+    inner: Unsubscribe,
+}
+Unixcoder Score: 0.03467677906155586
+--------------------------------------------------
+C_Code: 
+struct CacheDownloadService
+Function: 
+struct FfiPredownloadOptions<'a> {
+        headers: Vec<&'a str>,
+        ssl_type: &'a str,
+        ca_path: &'a str,
+    }
+Unixcoder Score: 0.033421650528907776
+--------------------------------------------------
+C_Code: 
+struct google_protobuf_ServiceDescriptorProto { upb_Message UPB_PRIVATE(base); }
+Function: 
+pub struct SerializedData {
+    /// Owns the memory.
+    data: NonNull<u8>,
+    len: usize,
+}
+Unixcoder Score: 0.027886878699064255
+--------------------------------------------------
+C_Code: 
+struct CacheDownloadService
+Function: 
+pub(crate) struct PrimeCallback {
+    task_id: TaskId,
+    finish: Arc<AtomicBool>,
+    state: Arc<AtomicUsize>,
+    cache_handle: Updater,
+    callbacks: Arc<Mutex<VecDeque<Box<dyn PreloadCallback>>>>,
+    progress_restriction: ProgressRestriction,
+    seq: usize,
+}
+Unixcoder Score: 0.024195687845349312
+--------------------------------------------------
+C_Code: 
+struct RemoteServiceStub
+Function: 
+pub struct AbilityStub {
+    inner: Box<dyn RemoteStub>,
+}
+Unixcoder Score: 0.020913397893309593
+--------------------------------------------------

@@ -102,3 +102,18 @@ export function getReport(sessionId) {
 export function downloadReport(sessionId) {
   return api.get(`/download/${sessionId}/report`, { responseType: 'blob' })
 }
+
+// ---- RAG Knowledge ----
+export function getRagKnowledge(sessionId) {
+  return api.get(`/translate/${sessionId}/rag/knowledge`)
+}
+
+// ---- Function Comparison ----
+export function getFunctionComparison(sessionId) {
+  return api.get(`/translate/${sessionId}/functions/comparison`)
+}
+
+// ---- Stage 1 Visualization ----
+export function getStage1Visualization(sessionId) {
+  return api.get(`/translate/${sessionId}/stage/stage1_prep/visualization`)
+}

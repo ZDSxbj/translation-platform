@@ -278,6 +278,60 @@ class PipelineManager:
                 rs_count += sum(1 for f in files if f.endswith(".rs"))
             stats["final_rust_files"] = rs_count
 
+        # Count effective lines, unsafe blocks, and unsafe lines in final project
+        if os.path.isdir(final_dir):
+            import re as _re
+            total_effective = 0
+            unsafe_blocks = 0
+            unsafe_effective = 0
+
+            for root, dirs, files in os.walk(final_dir):
+                # Skip hidden dirs (.c2r_*, etc) and generated artifacts
+                dirs[:] = [d for d in dirs
+                           if not d.startswith('.')
+                           and d != '__c2r_generated'
+                           and d != 'target']
+                for fn in files:
+                    if not fn.endswith(".rs"):
+                        continue
+                    fpath = os.path.join(root, fn)
+                    try:
+                        content = open(fpath, encoding="utf-8", errors="ignore").read()
+                    except Exception:
+                        continue
+
+                    # Total effective lines (excl. blank and // comments)
+                    for line in content.split('\n'):
+                        s = line.strip()
+                        if s and not s.startswith('//'):
+                            total_effective += 1
+
+                    # Unsafe blocks: entire block from 'unsafe' to matching '}'
+                    for um in _re.finditer(r'\bunsafe\s*\{', content):
+                        unsafe_blocks += 1
+                        depth = 0
+                        i = um.end() - 1  # position of {
+                        block_start = um.start()
+                        while i < len(content):
+                            if content[i] == '{':
+                                depth += 1
+                            elif content[i] == '}':
+                                depth -= 1
+                                if depth == 0:
+                                    block_text = content[block_start : i + 1]
+                                    for line in block_text.split('\n'):
+                                        s = line.strip()
+                                        if s and not s.startswith('//'):
+                                            unsafe_effective += 1
+                                    break
+                            i += 1
+
+            stats["total_effective_lines"] = total_effective
+            stats["unsafe_blocks"] = unsafe_blocks
+            stats["unsafe_effective_lines"] = unsafe_effective
+            if total_effective > 0:
+                stats["unsafe_ratio"] = round(unsafe_effective / total_effective * 100, 1)
+
         # Compile results: prefer incremental mode's translation_stats.json
         # over the legacy test_results/ directory (non-incremental mode).
         inc_stats = None

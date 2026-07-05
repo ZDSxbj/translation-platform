@@ -1,0 +1,292 @@
+C_Code: 
+void clear_dbg_line_insts() { dbg_line_insts_.clear(); }
+Function: 
+fn new(verbs: &'a mut Vec<u8>, points: &'a mut Vec<FfiPoint>) -> Self {
+        verbs.clear();
+        points.clear();
+        verbs.reserve(PATH_EXTRACTION_RESERVE);
+        points.reserve(PATH_EXTRACTION_RESERVE);
+        Self {
+            verbs,
+            points,
+            started: false,
+            current: FfiPoint::default(),
+        }
+    }
+Unixcoder Score: 0.004279331304132938
+--------------------------------------------------
+C_Code: 
+void memory_region::free(void *mem) {
+    // printf("free: ptr 0x%" PRIxPTR" region=%p\n", (uintptr_t) mem, this);
+    if (!mem) { return; }
+    alloc_header *alloc = get_header(mem);
+
+#   if RUSTRT_TRACK_ALLOCATIONS >= 1
+    assert(alloc->magic == MAGIC);
+#   endif
+
+    if (_live_allocations < 1) {
+        assert(false && "live_allocs < 1");
+    }
+    release_alloc(mem);
+    maybe_poison(mem);
+    ::free(alloc);
+}
+Function: 
+unsafe fn allocate_with_flags(layout: Layout, flags: c::DWORD) -> *mut u8 {
+    if layout.align() <= MIN_ALIGN {
+        return c::HeapAlloc(c::GetProcessHeap(), flags, layout.size()) as *mut u8
+    }
+
+    let size = layout.size() + layout.align();
+    let ptr = c::HeapAlloc(c::GetProcessHeap(), flags, size);
+    if ptr.is_null() {
+        ptr as *mut u8
+    } else {
+        align_ptr(ptr as *mut u8, layout.align())
+    }
+}
+Unixcoder Score: -0.021041404455900192
+--------------------------------------------------
+C_Code: 
+void memory_region::free(void *mem) {
+    // printf("free: ptr 0x%" PRIxPTR" region=%p\n", (uintptr_t) mem, this);
+    if (!mem) { return; }
+    alloc_header *alloc = get_header(mem);
+
+#   if RUSTRT_TRACK_ALLOCATIONS >= 1
+    assert(alloc->magic == MAGIC);
+#   endif
+
+    if (_live_allocations < 1) {
+        assert(false && "live_allocs < 1");
+    }
+    release_alloc(mem);
+    maybe_poison(mem);
+    ::free(alloc);
+}
+Function: 
+pub unsafe fn deallocate(ptr: *mut u8, _old_size: usize, _align: usize) {
+        libc::free(ptr as *mut libc::c_void)
+    }
+Unixcoder Score: -0.022082725539803505
+--------------------------------------------------
+C_Code: 
+SkPngEncoderMgr(png_structp pngPtr, png_infop infoPtr)
+        : fPngPtr(pngPtr)
+        , fInfoPtr(infoPtr)
+    {}
+Function: 
+fn new(
+        output: cxx::UniquePtr<ffi::WriteTrait>,
+        width: u32,
+        height: u32,
+        color: ffi::ColorType,
+        bits_per_component: u8,
+        compression: ffi::Compression,
+    ) -> Result<Self, png::EncodingError> {
+        let mut encoder = png::Encoder::new(output, width, height);
+        encoder.set_color(color.into());
+        encoder.set_depth(match bits_per_component {
+            8 => png::BitDepth::Eight,
+            16 => png::BitDepth::Sixteen,
+
+            // `SkPngRustEncoderImpl` only encodes 8-bit or 16-bit images.
+            _ => unreachable!(),
+        });
+        encoder.set_compression(compression.into());
+        encoder.set_adaptive_filter(match compression {
+            ffi::Compression::Fast => png::AdaptiveFilterType::NonAdaptive,
+            ffi::Compression::Default | ffi::Compression::Best => png::AdaptiveFilterType::Adaptive,
+            _ => unreachable!(),
+        });
+
+        let writer = encoder.write_header()?;
+        Ok(Self(writer))
+    }
+Unixcoder Score: -0.022863363847136497
+--------------------------------------------------
+C_Code: 
+void memory_region::free(void *mem) {
+    // printf("free: ptr 0x%" PRIxPTR" region=%p\n", (uintptr_t) mem, this);
+    if (!mem) { return; }
+    alloc_header *alloc = get_header(mem);
+
+#   if RUSTRT_TRACK_ALLOCATIONS >= 1
+    assert(alloc->magic == MAGIC);
+#   endif
+
+    if (_live_allocations < 1) {
+        assert(false && "live_allocs < 1");
+    }
+    release_alloc(mem);
+    maybe_poison(mem);
+    ::free(alloc);
+}
+Function: 
+unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        if layout.align() <= MIN_ALIGN {
+            let err = c::HeapFree(c::GetProcessHeap(), 0, ptr as c::LPVOID);
+            debug_assert!(err != 0, "Failed to free heap memory: {}",
+                          c::GetLastError());
+        } else {
+            let header = get_header(ptr);
+            let err = c::HeapFree(c::GetProcessHeap(), 0, header.0 as c::LPVOID);
+            debug_assert!(err != 0, "Failed to free heap memory: {}",
+                          c::GetLastError());
+        }
+    }
+Unixcoder Score: -0.02523878589272499
+--------------------------------------------------
+C_Code: 
+bool ReadRemoteObject(IpcIo *io, SvcIdentity *svc)
+{
+    if (io == NULL || svc == NULL) {
+        return false;
+    }
+    struct flat_binder_object *obj = IpcIoPopRef(io);
+    if (obj == NULL) {
+        RPC_LOG_ERROR("ReadRemoteObject failed: obj is null");
+        return false;
+    }
+    if (obj->type == BINDER_TYPE_BINDER) {
+        svc->token = obj->binder;
+        svc->handle = IPC_INVALID_HANDLE;
+        svc->cookie = obj->cookie;
+    } else {
+        svc->handle = (int32_t)obj->handle;
+        svc->cookie = obj->cookie;
+        WaitForProxyInit(svc);
+    }
+    return true;
+}
+Function: 
+pub fn read_remote(&mut self) -> IpcResult<RemoteObj> {
+        fn read_remote_process(
+            parcel: Pin<&mut MessageParcel>,
+        ) -> IpcResult<UniquePtr<IRemoteObjectWrapper>> {
+            let remote = ReadRemoteObject(parcel);
+            if remote.is_null() {
+                Err(IpcStatusCode::Failed)
+            } else {
+                Ok(remote)
+            }
+        }
+
+        self.read_process(read_remote_process)
+            .map(|remote| unsafe { RemoteObj::new_unchecked(remote) })
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__GetContextManager__idx4878_rank1.c", "source_rust_file": "API_Mapping__GetContextManager__idx4878_rank1.rs", "c_api": "std::make_unique<SptrIRemoteObject>(std::move(saMgr))", "rust_api": "RemoteObj::from_sptr(GetContextManager())", "mapping_type": "function", "description": "Smart pointer construction and transfer", "reasoning": "[Task Analysis] C function returns a smart pointer from an IPC call, Rust function wraps it in an Option. [Similarity] Names don't match but both perform context object retrieval. [Knowledge Extraction] No full structural match due to different control flow and logic. API mapping found for smart pointer conversion."}]
+Unixcoder Score: -0.03175286948680878
+--------------------------------------------------
+C_Code: 
+void SystemAbilityMgrStubUnLoadTest::TearDown()
+{
+    DTEST_LOG << "TearDown" << std::endl;
+}
+Function: 
+pub fn unload_system_ability(said: i32) -> i32 {
+        debug!("unload system ability {}", said);
+        UnloadSystemAbility(said)
+    }
+Unixcoder Score: -0.03844275325536728
+--------------------------------------------------
+C_Code: 
+sk_sp<SkTypeface> SkFontMgr_OHOS::onMakeFromData(sk_sp<SkData> data, int ttcIndex) const
+{
+    if (data == nullptr) {
+        return nullptr;
+    }
+    std::unique_ptr<SkMemoryStream> memoryStream = std::make_unique<SkMemoryStream>(data);
+    SkFontArguments args;
+    args.setCollectionIndex(ttcIndex);
+    return this->makeTypeface(std::move(memoryStream), args, nullptr);
+}
+Function: 
+fn make_font_ref<'a>(font_data: &'a [u8], index: u32) -> Box<BridgeFontRef<'a>> {
+    let font = make_font_ref_internal(font_data, index).ok();
+    let has_any_color = font
+        .as_ref()
+        .map(|f| {
+            f.cbdt().is_ok() ||
+            f.sbix().is_ok() ||
+            // ColorGlyphCollection::get_with_format() first thing checks for presence of colr(),
+            // so we do the same:
+            f.colr().is_ok()
+        })
+        .unwrap_or_default();
+
+    Box::new(BridgeFontRef {
+        font,
+        has_any_color,
+    })
+}
+Unixcoder Score: -0.040823571383953094
+--------------------------------------------------
+C_Code: 
+sk_sp<SkTypeface> SkFontMgr_OHOS::onMakeFromData(sk_sp<SkData> data, int ttcIndex) const
+{
+    if (data == nullptr) {
+        return nullptr;
+    }
+    std::unique_ptr<SkMemoryStream> memoryStream = std::make_unique<SkMemoryStream>(data);
+    SkFontArguments args;
+    args.setCollectionIndex(ttcIndex);
+    return this->makeTypeface(std::move(memoryStream), args, nullptr);
+}
+Function: 
+fn make_font_ref_internal<'a>(font_data: &'a [u8], index: u32) -> Result<FontRef<'a>, ReadError> {
+    match FileRef::new(font_data) {
+        Ok(file_ref) => match file_ref {
+            FileRef::Font(font_ref) => {
+                // Indices with the higher bits set are meaningful here and do not result in an
+                // error, as they may refer to a named instance and are taken into account by the
+                // Fontations typeface implementation,
+                // compare `coordinates_for_shifted_named_instance_index()`.
+                if index & 0xFFFF > 0 {
+                    Err(ReadError::InvalidCollectionIndex(index))
+                } else {
+                    Ok(font_ref)
+                }
+            }
+            FileRef::Collection(collection) => collection.get(index),
+        },
+        Err(e) => Err(e),
+    }
+}
+Unixcoder Score: -0.04502672702074051
+--------------------------------------------------
+C_Code: 
+sk_sp<SkTypeface> SkFontMgr_OHOS::onMakeFromData(sk_sp<SkData> data, int ttcIndex) const
+{
+    if (data == nullptr) {
+        return nullptr;
+    }
+    std::unique_ptr<SkMemoryStream> memoryStream = std::make_unique<SkMemoryStream>(data);
+    SkFontArguments args;
+    args.setCollectionIndex(ttcIndex);
+    return this->makeTypeface(std::move(memoryStream), args, nullptr);
+}
+Function: 
+fn make_font_ref_internal<'a>(font_data: &'a [u8], index: u32) -> Result<FontRef<'a>, ReadError> {
+    match FileRef::new(font_data) {
+        Ok(file_ref) => match file_ref {
+            FileRef::Font(font_ref) => {
+                // Indices with the higher bits set are meaningful here and do not result in an
+                // error, as they may refer to a named instance and are taken into account by the
+                // Fontations typeface implementation,
+                // compare `coordinates_for_shifted_named_instance_index()`.
+                if index & 0xFFFF > 0 {
+                    Err(ReadError::InvalidCollectionIndex(index))
+                } else {
+                    Ok(font_ref)
+                }
+            }
+            FileRef::Collection(collection) => collection.get(index),
+        },
+        Err(e) => Err(e),
+    }
+}
+Unixcoder Score: -0.053301069885492325
+--------------------------------------------------

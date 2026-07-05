@@ -1,0 +1,397 @@
+C_Code: 
+struct DispatchIndirectCommand
+Function: 
+struct DispatchInfo {
+        use_large_path_scan: bool,
+
+        // Dispatch workgroup counts for each pipeline
+        path_reduce: WorkgroupSize,
+        path_reduce2: WorkgroupSize,
+        path_scan1: WorkgroupSize,
+        path_scan: WorkgroupSize,
+        bbox_clear: WorkgroupSize,
+        flatten: WorkgroupSize,
+        draw_reduce: WorkgroupSize,
+        draw_leaf: WorkgroupSize,
+        clip_reduce: WorkgroupSize,
+        clip_leaf: WorkgroupSize,
+        binning: WorkgroupSize,
+        tile_alloc: WorkgroupSize,
+        path_count_setup: WorkgroupSize,
+        // Note: `path_count` must use an indirect dispatch
+        backdrop: WorkgroupSize,
+        coarse: WorkgroupSize,
+        path_tiling_setup: WorkgroupSize,
+        // Note: `path_tiling` must use an indirect dispatch
+        fine: WorkgroupSize,
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "Partial", "source_c_file": "Partial__GetCommonEventExtraDataIdlist__idx4877_rank1.c", "source_rust_file": "Partial__GetCommonEventExtraDataIdlist__idx4877_rank1.rs", "c_fragment": "auto ret = sysm->GetCommonEventExtraDataIdlist(saId, idList, eventName);\n    if (ret != ERR_OK) {\n        return ret;\n    }", "rust_fragment": "let ret = SystemAbilityManager::get_common_event_extra_data_id_list(1494, &mut id_list, \"\");\n        assert_eq!(ret, 0);", "description": "Calling a system ability manager function to retrieve data and checking return code", "reasoning": "[Task Analysis] C function retrieves extra data IDs from a system ability manager, while Rust function calls the same functionality in a test-like context with hardcoded values. [Similarity] Names do not refer to the same concept (GetCommonEventExtraDataIdlist vs common_event), and the Rust code is more of a test/demo than an implementation. [Knowledge Extraction] No full structural match due to domain mismatch (implementation vs test/demo), but partial structural fragments and API mappings can be extracted."}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__GetCommonEventExtraDataIdlist__idx4877_rank1.c", "source_rust_file": "Partial__GetCommonEventExtraDataIdlist__idx4877_rank1.rs", "c_api": "extraDataIdList.push_back", "rust_api": "println!", "mapping_type": "function", "description": "Processing each ID from the retrieved list (C appends to vector, Rust prints)", "reasoning": "[Task Analysis] C function retrieves extra data IDs from a system ability manager, while Rust function calls the same functionality in a test-like context with hardcoded values. [Similarity] Names do not refer to the same concept (GetCommonEventExtraDataIdlist vs common_event), and the Rust code is more of a test/demo than an implementation. [Knowledge Extraction] No full structural match due to domain mismatch (implementation vs test/demo), but partial structural fragments and API mappings can be extracted."}, {"knowledge_type": "Partial", "source_c_file": "Partial__GetCommonEventExtraDataIdlist__idx4877_rank1.c", "source_rust_file": "Partial__GetCommonEventExtraDataIdlist__idx4877_rank1.rs", "c_fragment": "for (auto id : idList) {\n        extraDataIdList.push_back(id);\n    }", "rust_fragment": "for id in id_list {\n            println!(\"all extra id is {}\", id)\n        }", "description": "Iterating over a list and processing each element (C pushes to vector, Rust prints)", "reasoning": "[Task Analysis] C function retrieves extra data IDs from a system ability manager, while Rust function calls the same functionality in a test-like context with hardcoded values. [Similarity] Names do not refer to the same concept (GetCommonEventExtraDataIdlist vs common_event), and the Rust code is more of a test/demo than an implementation. [Knowledge Extraction] No full structural match due to domain mismatch (implementation vs test/demo), but partial structural fragments and API mappings can be extracted."}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__GetCommonEventExtraDataIdlist__idx4877_rank1.c", "source_rust_file": "Partial__GetCommonEventExtraDataIdlist__idx4877_rank1.rs", "c_api": "sysm->GetCommonEventExtraDataIdlist", "rust_api": "SystemAbilityManager::get_common_event_extra_data_id_list", "mapping_type": "function", "description": "Retrieving common event extra data ID list from system ability manager", "reasoning": "[Task Analysis] C function retrieves extra data IDs from a system ability manager, while Rust function calls the same functionality in a test-like context with hardcoded values. [Similarity] Names do not refer to the same concept (GetCommonEventExtraDataIdlist vs common_event), and the Rust code is more of a test/demo than an implementation. [Knowledge Extraction] No full structural match due to domain mismatch (implementation vs test/demo), but partial structural fragments and API mappings can be extracted."}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__GetCommonEventExtraDataIdlist__idx4877_rank1.c", "source_rust_file": "Partial__GetCommonEventExtraDataIdlist__idx4877_rank1.rs", "c_api": "idList.push_back", "rust_api": "println!", "mapping_type": "function", "description": "Processing each ID from the retrieved list (C appends to vector, Rust prints)", "reasoning": "[Task Analysis] C function retrieves extra data IDs from a system ability manager, while Rust function calls the same functionality in a test-like context with hardcoded values. [Similarity] Names do not refer to the same concept (GetCommonEventExtraDataIdlist vs common_event), and the Rust code is more of a test/demo than an implementation. [Knowledge Extraction] No full structural match due to domain mismatch (implementation vs test/demo), but partial structural fragments and API mappings can be extracted."}]
+Unixcoder Score: 0.07099640369415283
+--------------------------------------------------
+C_Code: 
+static int32_t DBinderRemoteRequest(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption *option)
+{
+    int32_t ret = -1;
+    switch (code) {
+        case GET_PROTO_INFO: {
+            ret = ProcessProto(code, data, reply, option);
+            break;
+        }
+        default: {
+            RPC_LOG_ERROR("unknown dbinder code %u", code);
+            break;
+        }
+    }
+    return ret;
+}
+Function: 
+pub fn async_send_request<F, R>(
+        self: &Arc<Self>,
+        code: u32,
+        mut data: MsgParcel,
+        mut option: MsgOption,
+        call_back: F,
+    ) where
+        F: FnOnce(MsgParcel) -> R,
+        F: Send + 'static,
+        R: Send + 'static,
+    {
+        let remote = self.clone();
+        Runtime::spawn_blocking(move || {
+            let reply = remote.send_request(code, &mut data);
+            match reply {
+                Ok(reply) => {
+                    call_back(reply);
+                    IpcStatusCode::Ok
+                }
+                _ => IpcStatusCode::Failed,
+            }
+        });
+    }
+Unixcoder Score: 0.07069618254899979
+--------------------------------------------------
+C_Code: 
+struct DispatchIndirectCommand
+Function: 
+struct BufferSizes {
+        // Known size buffers
+        path_reduced: u32,
+        path_reduced2: u32,
+        path_reduced_scan: u32,
+        path_monoids: u32,
+        path_bboxes: u32,
+        draw_reduced: u32,
+        draw_monoids: u32,
+        info: u32,
+        clip_inps: u32,
+        clip_els: u32,
+        clip_bics: u32,
+        clip_bboxes: u32,
+        draw_bboxes: u32,
+        bump_alloc: u32,
+        indirect_count: u32,
+        bin_headers: u32,
+        paths: u32,
+        // Bump allocated buffers
+        lines: u32,
+        bin_data: u32,
+        tiles: u32,
+        seg_counts: u32,
+        segments: u32,
+        ptcl: u32,
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "Partial", "source_c_file": "Partial__CreateGroup__idx879_rank2.c", "source_rust_file": "Partial__CreateGroup__idx879_rank2.rs", "c_fragment": "if (ret != ERR_NONE) {\n        REQUEST_HILOGE(\"End Request AttachGroup, failed: %{public}d\", ret);\n        if (ret != REMOTE_DIED_ERROR) {\n            SysEventLog::SendSysEventLog(FAULT_EVENT, IPC_FAULT_00, std::to_string(ret));\n        }\n        return E_SERVICE_ERROR;\n    }", "rust_fragment": "if !self.task_manager.lock().unwrap().send_event(event) {\n            return Err(IpcStatusCode::Failed);\n        }", "description": "Both handle IPC communication failure and return appropriate error codes.", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [API Mapping Inference] -> [Structural Fragment Matching] -> [Final Classification]"}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__CreateGroup__idx879_rank2.c", "source_rust_file": "Partial__CreateGroup__idx879_rank2.rs", "c_api": "REQUEST_HILOGE(...)", "rust_api": "error!(...)", "mapping_type": "function", "description": "Logging error messages", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [API Mapping Inference] -> [Structural Fragment Matching] -> [Final Classification]"}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__CreateGroup__idx879_rank2.c", "source_rust_file": "Partial__CreateGroup__idx879_rank2.rs", "c_api": "data.WriteInterfaceToken(GetDescriptor())", "rust_api": "data.read::<String>()?.parse::<u32>()", "mapping_type": "function", "description": "Data serialization and deserialization for IPC message", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [API Mapping Inference] -> [Structural Fragment Matching] -> [Final Classification]"}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__CreateGroup__idx879_rank2.c", "source_rust_file": "Partial__CreateGroup__idx879_rank2.rs", "c_api": "Remote()->SendRequest(...)", "rust_api": "self.task_manager.lock().unwrap().send_event(event)", "mapping_type": "function", "description": "Sending IPC request and handling response", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [API Mapping Inference] -> [Structural Fragment Matching] -> [Final Classification]"}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__CreateGroup__idx879_rank2.c", "source_rust_file": "Partial__CreateGroup__idx879_rank2.rs", "c_api": "SysEventLog::SendSysEventLog(...)", "rust_api": "sys_event!(...)", "mapping_type": "function", "description": "Sending system event logs", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [API Mapping Inference] -> [Structural Fragment Matching] -> [Final Classification]"}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__CreateGroup__idx879_rank2.c", "source_rust_file": "Partial__CreateGroup__idx879_rank2.rs", "c_api": "data.WriteBool(gauge)", "rust_api": "data.read::<Vec<String>>()?", "mapping_type": "function", "description": "Writing boolean values to IPC message buffer", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [API Mapping Inference] -> [Structural Fragment Matching] -> [Final Classification]"}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__CreateGroup__idx879_rank2.c", "source_rust_file": "Partial__CreateGroup__idx879_rank2.rs", "c_api": "data.WriteString(*notification.title)", "rust_api": "task_id.parse::<u32>()", "mapping_type": "function", "description": "Writing string data to IPC message buffer", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [API Mapping Inference] -> [Structural Fragment Matching] -> [Final Classification]"}, {"knowledge_type": "Partial", "source_c_file": "Partial__CreateGroup__idx879_rank2.c", "source_rust_file": "Partial__CreateGroup__idx879_rank2.rs", "c_fragment": "if (notification.title != std::nullopt) {\n        data.WriteBool(true);\n        data.WriteString(*notification.title);\n    } else {\n        data.WriteBool(false);\n    }", "rust_fragment": "let Ok(group_id) = data.read::<String>()?.parse::<u32>() else {\n            error!(\"End Service attach_group, group_id, failed: group_id not valid\",);\n            sys_event!(\n                ExecError,\n                DfxCode::INVALID_IPC_MESSAGE_A38,\n                \"End Service attach_group, group_id, failed: group_id not valid\"\n            );\n            reply.write(&(ErrorCode::GroupNotFound as i32))?\n            return Ok(());\n        };", "description": "Both handle optional data with validation and error reporting.", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [API Mapping Inference] -> [Structural Fragment Matching] -> [Final Classification]"}]
+Unixcoder Score: 0.04548892378807068
+--------------------------------------------------
+C_Code: 
+int32_t ListenAbilityStub::OnRemoteRequest(uint32_t code,
+    MessageParcel& data, MessageParcel &reply, MessageOption &option)
+{
+    std::u16string interfaceToken = data.ReadInterfaceToken();
+    if (interfaceToken != GetDescriptor()) {
+        return ERR_PERMISSION_DENIED;
+    }
+    switch (code) {
+        case ADD_VOLUME: {
+            int32_t volume = data.ReadInt32();
+            bool ret = reply.WriteInt32(AddVolume(volume));
+            return (ret ? ERR_OK : ERR_FLATTEN_OBJECT);
+        }
+        default:
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
+}
+Function: 
+fn on_remote_request(
+        &self,
+        code: u32,
+        data: &mut ipc::parcel::MsgParcel,
+        reply: &mut ipc::parcel::MsgParcel,
+    ) -> i32 {
+        match code {
+            _ if code == AudioInterfaceCode::Unload as u32 => {
+                self.unload(data, reply);
+            }
+            _ if code == AudioInterfaceCode::RequestExample as u32 => {
+                self.request_example(data, reply);
+            }
+            _ if code == AudioInterfaceCode::CheckResult as u32 => {
+                self.check_result(data, reply);
+            }
+            _ => return IpcStatusCode::Failed as i32,
+        }
+        0
+    }
+Unixcoder Score: 0.04317719489336014
+--------------------------------------------------
+C_Code: 
+int32_t ListenAbilityStub::OnRemoteRequest(uint32_t code,
+    MessageParcel& data, MessageParcel &reply, MessageOption &option)
+{
+    std::u16string interfaceToken = data.ReadInterfaceToken();
+    if (interfaceToken != GetDescriptor()) {
+        return ERR_PERMISSION_DENIED;
+    }
+    switch (code) {
+        case ADD_VOLUME: {
+            int32_t volume = data.ReadInt32();
+            bool ret = reply.WriteInt32(AddVolume(volume));
+            return (ret ? ERR_OK : ERR_FLATTEN_OBJECT);
+        }
+        default:
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    }
+}
+Function: 
+pub fn on_remote_request(
+        &mut self,
+        code: u32,
+        data: Pin<&mut MessageParcel>,
+        reply: Pin<&mut MessageParcel>,
+    ) -> i32 {
+        unsafe {
+            let mut data = MsgParcel::from_ptr(data.get_unchecked_mut() as *mut MessageParcel);
+            let mut reply = MsgParcel::from_ptr(reply.get_unchecked_mut() as *mut MessageParcel);
+            self.inner.on_remote_request(code, &mut data, &mut reply)
+        }
+    }
+Unixcoder Score: 0.04190832003951073
+--------------------------------------------------
+C_Code: 
+bool WriteRawData(IpcIo *io, const void *data, size_t size)
+{
+    if (io == NULL || data == NULL || size == 0) {
+        RPC_LOG_ERROR("IPC io == NULL || data == NULL || size == 0 failed: %s:%d\n", __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    if (size > MAX_IO_SIZE) {
+        io->flag |= IPC_IO_OVERFLOW;
+        RPC_LOG_ERROR("IPC size > MAX_IO_SIZE failed: %s:%d\n", __FUNCTION__, __LINE__);
+        return false;
+    }
+
+    bool ret = WriteUint32(io, (uint32_t)size);
+    if (ret) {
+        ret = WriteBuffer(io, data, size);
+    }
+    return ret;
+}
+Function: 
+pub fn write_buffer(&mut self, buffer: &[u8]) -> IpcResult<()> {
+        match WriteBuffer(self.as_msg_parcel_mut(), buffer) {
+            true => Ok(()),
+            false => Err(IpcStatusCode::Failed),
+        }
+    }
+Unixcoder Score: 0.017064634710550308
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManagerStub::SubsSystemAbilityInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t systemAbilityId = -1;
+    bool ret = data.ReadInt32(systemAbilityId);
+    if (!ret) {
+        return ERR_NULL_OBJECT;
+    }
+    if (!CheckInputSysAbilityId(systemAbilityId)) {
+        HILOGW("SubsSystemAbilityInner read SAId failed!");
+        return ERR_NULL_OBJECT;
+    }
+    sptr<IRemoteObject> remoteObject = data.ReadRemoteObject();
+    if (remoteObject == nullptr) {
+        HILOGW("SubsSystemAbilityInner read listener failed!");
+        return ERR_NULL_OBJECT;
+    }
+    sptr<ISystemAbilityStatusChange> listener = iface_cast<ISystemAbilityStatusChange>(remoteObject);
+    if (listener == nullptr) {
+        HILOGW("SubsSystemAbilityInner iface_cast failed!");
+        return ERR_NULL_OBJECT;
+    }
+    SamgrXCollie samgrXCollie("samgr--SubsSA_" + ToString(systemAbilityId));
+    int32_t result = SubscribeSystemAbility(systemAbilityId, listener);
+    HILOGD("SubsSystemAbilityInner result is %{public}d", result);
+    ret = reply.WriteInt32(result);
+    if (!ret) {
+        HILOGW("SubsSystemAbilityInner write reply failed.");
+        return ERR_FLATTEN_OBJECT;
+    }
+
+    return result;
+}
+Function: 
+pub fn subscribe_system_ability(
+        said: i32,
+        on_add: fn(i32, &str),
+        on_remove: fn(i32, &str),
+    ) -> UnsubscribeHandler {
+        debug!("subscribe system ability {}", said);
+        UnsubscribeHandler::new(Unsubscribe::Ability(SubscribeSystemAbility(
+            said, on_add, on_remove,
+        )))
+    }
+Unixcoder Score: 0.003338078735396266
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManagerStub::GetSystemProcessInfoInner(MessageParcel& data, MessageParcel& reply)
+{
+    HILOGI("GetSystemProcessInfoInner called");
+    if (!CanRequest()) {
+        HILOGE("GetSystemProcessInfoInner PERMISSION DENIED!");
+        return ERR_PERMISSION_DENIED;
+    }
+    int32_t systemAbilityId = -1;
+    bool ret = data.ReadInt32(systemAbilityId);
+    if (!ret) {
+        return ERR_NULL_OBJECT;
+    }
+    if (!CheckInputSysAbilityId(systemAbilityId)) {
+        HILOGW("GetSystemProcessInfoInner read SAId failed!");
+        return ERR_NULL_OBJECT;
+    }
+    SystemProcessInfo processInfo;
+    int32_t result = GetSystemProcessInfo(systemAbilityId, processInfo);
+    ret = reply.WriteInt32(result);
+    if (!ret) {
+        HILOGW("GetSystemProcessInfoInner write reply failed.");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (result != ERR_OK) {
+        return ERR_OK;
+    }
+
+    ret = reply.WriteString(processInfo.processName);
+    if (!ret) {
+        HILOGW("GetSystemProcessInfoInner write procName failed.");
+        return ERR_FLATTEN_OBJECT;
+    }
+    ret = reply.WriteInt32(processInfo.pid);
+    if (!ret) {
+        HILOGW("GetSystemProcessInfoInner write pid failed.");
+        return ERR_FLATTEN_OBJECT;
+    }
+    ret = reply.WriteInt32(processInfo.uid);
+    if (!ret) {
+        HILOGW("GetSystemProcessInfoInner write uid failed.");
+            return ERR_FLATTEN_OBJECT;
+    }
+    return ERR_OK;
+}
+Function: 
+pub fn get_system_process_info(said: i32) -> SystemProcessInfo {
+        info!("get system ability {} process info", said);
+        GetSystemProcessInfo(said)
+    }
+Unixcoder Score: 0.0017858827486634254
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManagerStub::SubscribeSystemProcessInner(MessageParcel& data, MessageParcel& reply)
+{
+    if (!CanRequest()) {
+        HILOGE("SubscribeSystemProcessInner PERMISSION DENIED!");
+        return ERR_PERMISSION_DENIED;
+    }
+    sptr<IRemoteObject> remoteObject = data.ReadRemoteObject();
+    if (remoteObject == nullptr) {
+        HILOGW("SubscribeSystemProcessInner read listener failed!");
+        return ERR_NULL_OBJECT;
+    }
+    sptr<ISystemProcessStatusChange> listener = iface_cast<ISystemProcessStatusChange>(remoteObject);
+    if (listener == nullptr) {
+        HILOGW("SubscribeSystemProcessInner iface_cast failed!");
+        return ERR_NULL_OBJECT;
+    }
+    int32_t result = SubscribeSystemProcess(listener);
+    HILOGD("SubscribeSystemProcess result is %{public}d", result);
+    bool ret = reply.WriteInt32(result);
+    if (!ret) {
+        HILOGW("SubscribeSystemProcessInner write reply failed.");
+        return ERR_FLATTEN_OBJECT;
+    }
+    return result;
+}
+Function: 
+pub fn subscribe_system_process(
+        on_start: fn(&SystemProcessInfo),
+        on_stop: fn(&SystemProcessInfo),
+    ) -> UnsubscribeHandler {
+        UnsubscribeHandler::new(Unsubscribe::Process(SubscribeSystemProcess(
+            on_start, on_stop,
+        )))
+    }
+Unixcoder Score: 0.0010768844513222575
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManagerStub::GetSystemProcessInfoInner(MessageParcel& data, MessageParcel& reply)
+{
+    HILOGI("GetSystemProcessInfoInner called");
+    if (!CanRequest()) {
+        HILOGE("GetSystemProcessInfoInner PERMISSION DENIED!");
+        return ERR_PERMISSION_DENIED;
+    }
+    int32_t systemAbilityId = -1;
+    bool ret = data.ReadInt32(systemAbilityId);
+    if (!ret) {
+        return ERR_NULL_OBJECT;
+    }
+    if (!CheckInputSysAbilityId(systemAbilityId)) {
+        HILOGW("GetSystemProcessInfoInner read SAId failed!");
+        return ERR_NULL_OBJECT;
+    }
+    SystemProcessInfo processInfo;
+    int32_t result = GetSystemProcessInfo(systemAbilityId, processInfo);
+    ret = reply.WriteInt32(result);
+    if (!ret) {
+        HILOGW("GetSystemProcessInfoInner write reply failed.");
+        return ERR_FLATTEN_OBJECT;
+    }
+    if (result != ERR_OK) {
+        return ERR_OK;
+    }
+
+    ret = reply.WriteString(processInfo.processName);
+    if (!ret) {
+        HILOGW("GetSystemProcessInfoInner write procName failed.");
+        return ERR_FLATTEN_OBJECT;
+    }
+    ret = reply.WriteInt32(processInfo.pid);
+    if (!ret) {
+        HILOGW("GetSystemProcessInfoInner write pid failed.");
+        return ERR_FLATTEN_OBJECT;
+    }
+    ret = reply.WriteInt32(processInfo.uid);
+    if (!ret) {
+        HILOGW("GetSystemProcessInfoInner write uid failed.");
+            return ERR_FLATTEN_OBJECT;
+    }
+    return ERR_OK;
+}
+Function: 
+pub fn get_system_process_info(said: i32) -> SystemProcessInfo {
+        info!("get system ability {} process info", said);
+        GetSystemProcessInfo(said)
+    }
+Unixcoder Score: -0.0006292147445492446
+--------------------------------------------------

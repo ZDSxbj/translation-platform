@@ -53,7 +53,7 @@
     <!-- Intermediate Results — shown after stage completes -->
     <div v-if="stage.status === 'completed'" class="intermediate-results">
       <el-divider />
-      <div class="results-header">
+      <div v-if="!props.hideFileTree" class="results-header">
         <el-icon><FolderOpened /></el-icon>
         <span>Stage Output Files</span>
         <el-button size="small" text @click="showFiles = !showFiles">
@@ -61,7 +61,7 @@
         </el-button>
       </div>
 
-      <div v-if="showFiles" class="results-pane">
+      <div v-if="!props.hideFileTree && showFiles" class="results-pane">
         <div class="file-tree-panel">
           <el-tree
             :data="fileTreeData"
@@ -111,6 +111,7 @@ const props = defineProps({
   sessionId: { type: String, required: true },
   isRunning: { type: Boolean, default: false },
   workspaceSubdir: { type: String, default: '' },
+  hideFileTree: { type: Boolean, default: false },
 })
 
 defineEmits(['run'])

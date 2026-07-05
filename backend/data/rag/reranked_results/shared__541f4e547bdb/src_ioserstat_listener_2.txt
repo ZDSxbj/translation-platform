@@ -1,0 +1,197 @@
+C_Code: 
+struct UdsListenerWrapper
+Function: 
+pub struct UdsListener {
+    state: Mutex<ChannelState>,
+}
+Unixcoder Score: 0.09580711275339127
+--------------------------------------------------
+C_Code: 
+struct UdsListenerWrapper
+Function: 
+struct Response {
+        taskId: String,
+        version: String,
+        statusCode: i32,
+        reason: String,
+        headers: Vec<String>,
+    }
+Unixcoder Score: 0.08985897153615952
+--------------------------------------------------
+C_Code: 
+void RequestManagerImpl::RestoreListener(void (*callback)())
+{
+    callback_ = callback;
+}
+Function: 
+fn poll_progress(
+        self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+        downloaded: u64,
+        total: Option<u64>,
+    ) -> Poll<Result<(), HttpClientError>> {
+        let me = self.get_mut();
+        me.callback
+            .common_progress(total.unwrap_or_default(), downloaded, 0, 0);
+        if me.abort_flag.load(Ordering::Acquire) {
+            Poll::Ready(Err(HttpClientError::user_aborted()))
+        } else {
+            Poll::Ready(Ok(()))
+        }
+    }
+Unixcoder Score: 0.033654965460300446
+--------------------------------------------------
+C_Code: 
+int32_t InvokerListenThreadStub(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option, OnRemoteRequest func)
+{
+    (void)code;
+    (void)data;
+    (void)reply;
+    (void)option;
+    (void)func;
+    return ERR_NONE;
+}
+Function: 
+fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+            0
+        }
+Unixcoder Score: 0.023044465109705925
+--------------------------------------------------
+C_Code: 
+int32_t InvokerListenThreadStub(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option, OnRemoteRequest func)
+{
+    (void)code;
+    (void)data;
+    (void)reply;
+    (void)option;
+    (void)func;
+    return ERR_NONE;
+}
+Function: 
+fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+        R::on_remote_request(self, code, data, reply)
+    }
+Unixcoder Score: 0.017807895317673683
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManager::SubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener)
+{
+    if (abilityStateScheduler_ == nullptr) {
+        HILOGE("abilityStateScheduler is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    return abilityStateScheduler_->SubscribeSystemProcess(listener);
+}
+Function: 
+pub fn subscribe_system_process(
+        on_start: fn(&SystemProcessInfo),
+        on_stop: fn(&SystemProcessInfo),
+    ) -> UnsubscribeHandler {
+        UnsubscribeHandler::new(Unsubscribe::Process(SubscribeSystemProcess(
+            on_start, on_stop,
+        )))
+    }
+Unixcoder Score: 0.01758710667490959
+--------------------------------------------------
+C_Code: 
+void ResponseMessageReceiver::ShutdownChannel()
+{
+    {
+        std::lock_guard<std::mutex> lock(sockFdMutex_);
+        if (sockFd_ > 0) {
+            serviceHandler_->RemoveFileDescriptorListener(sockFd_);
+            fdsan_close_with_tag(sockFd_, REQUEST_FDSAN_TAG);
+        }
+        sockFd_ = -1;
+    }
+    this->handler_->OnChannelBroken();
+}
+Function: 
+pub(crate) fn open_channel(&self, pid: u64) -> Result<Arc<UnixDatagram>, ErrorCode> {
+        let (tx, rx) = channel::<Result<Arc<UnixDatagram>, ErrorCode>>();
+        let event = ClientEvent::OpenChannel(pid, tx);
+        if !self.send_event(event) {
+            return Err(ErrorCode::Other);
+        }
+        let rx = Recv::new(rx);
+        match rx.get() {
+            Some(ret) => ret,
+            None => {
+                error!("open channel fail, recv none");
+                sys_event!(
+                    ExecFault,
+                    DfxCode::UDS_FAULT_03,
+                    "open channel fail, recv none"
+                );
+                Err(ErrorCode::Other)
+            }
+        }
+    }
+Unixcoder Score: 0.004838841967284679
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManager::SubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener)
+{
+    if (abilityStateScheduler_ == nullptr) {
+        HILOGE("abilityStateScheduler is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    return abilityStateScheduler_->SubscribeSystemProcess(listener);
+}
+Function: 
+pub fn subscribe_system_process(
+        on_start: fn(&SystemProcessInfo),
+        on_stop: fn(&SystemProcessInfo),
+    ) -> UnsubscribeHandler {
+        UnsubscribeHandler::new(Unsubscribe::Process(SubscribeSystemProcess(
+            on_start, on_stop,
+        )))
+    }
+Unixcoder Score: 0.0021715029142796993
+--------------------------------------------------
+C_Code: 
+std::unique_ptr<UnSubscribeSystemAbilityHandler> SubscribeSystemAbility(int32_t systemAbilityId,
+    rust::Fn<void(int32_t systemAbilityId, const rust::str deviceId)> onAdd,
+    rust::Fn<void(int32_t systemAbilityId, const rust::str deviceId)> onRemove)
+{
+    auto sysm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sysm == nullptr) {
+        return nullptr;
+    }
+
+    sptr<ISystemAbilityStatusChange> listener = new SystemAbilityStatusChangeWrapper(onAdd, onRemove);
+    sysm->SubscribeSystemAbility(systemAbilityId, listener);
+    return std::make_unique<UnSubscribeSystemAbilityHandler>(systemAbilityId, listener);
+}
+Function: 
+pub fn subscribe_system_ability(
+        said: i32,
+        on_add: fn(i32, &str),
+        on_remove: fn(i32, &str),
+    ) -> UnsubscribeHandler {
+        info!("subscribe system ability {}", said);
+        UnsubscribeHandler::new(Unsubscribe::Ability(SubscribeSystemAbility(
+            said, on_add, on_remove,
+        )))
+    }
+Unixcoder Score: 0.0008832761668600142
+--------------------------------------------------
+C_Code: 
+void RequestManagerImpl::RestoreListener(void (*callback)())
+{
+    callback_ = callback;
+}
+Function: 
+fn poll_download(
+        self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+        data: &[u8],
+    ) -> Poll<Result<usize, HttpClientError>> {
+        let me = self.get_mut();
+        me.callback.common_data_receive(data, || {
+            me.headers.get("content-length").map(|v| v.parse().unwrap())
+        });
+        Poll::Ready(Ok(data.len()))
+    }
+Unixcoder Score: -0.0015991977415978909
+--------------------------------------------------

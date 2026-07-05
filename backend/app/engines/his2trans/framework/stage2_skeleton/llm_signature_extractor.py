@@ -126,12 +126,15 @@ class LLMSignatureExtractor:
         """调用 LLM"""
         if hasattr(self.llm_client, 'chat'):
             # OpenAI 兼容接口
-            response = self.llm_client.chat.completions.create(
+            kwargs = dict(
                 model=self.model_name,
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0,
-                max_tokens=4096
+                max_tokens=4096,
             )
+            if "deepseek-v4" in str(self.model_name).lower():
+                kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
+            response = self.llm_client.chat.completions.create(**kwargs)
             return response.choices[0].message.content
         elif hasattr(self.llm_client, 'generate'):
             # 简单生成接口
@@ -386,15 +389,18 @@ class LLMBindgenFallback:
         prompt = BINDGEN_FALLBACK_PROMPT.format(header_content=header_content)
         
         try:
-            response = self.llm_client.chat.completions.create(
+            kwargs = dict(
                 model=self.model_name,
                 messages=[
                     {"role": "system", "content": "You are a C to Rust FFI expert. Output ONLY raw Rust code without any markdown formatting, code fences, or explanations. Never use ``` in your output."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0,  # 低温度，确保输出稳定
-                max_tokens=16000
+                temperature=0,
+                max_tokens=16000,
             )
+            if "deepseek-v4" in str(self.model_name).lower():
+                kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
+            response = self.llm_client.chat.completions.create(**kwargs)
             
             result = response.choices[0].message.content
             rust_code = self._extract_rust_code(result)

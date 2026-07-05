@@ -1,0 +1,436 @@
+C_Code: 
+UPB_API_INLINE bool upb_JsonDecode(const char* buf, size_t size,
+                                   upb_Message* msg, const upb_MessageDef* m,
+                                   const upb_DefPool* symtab, int options,
+                                   upb_Arena* arena, upb_Status* status) {
+  return upb_JsonDecodeDetectingNonconformance(buf, size, msg, m, symtab,
+                                               options, arena, status) ==
+         kUpb_JsonDecodeResult_Ok;
+}
+Function: 
+pub unsafe fn decode(
+    buf: &[u8],
+    msg: RawMessage,
+    mini_table: *const upb_MiniTable,
+    arena: &Arena,
+) -> Result<(), DecodeStatus> {
+    let len = buf.len();
+    let buf = buf.as_ptr();
+    let options = DecodeOption::CheckRequired as i32;
+
+    // SAFETY:
+    // - `mini_table` is the one associated with `msg`
+    // - `buf` is legally readable for at least `buf_size` bytes.
+    // - `extreg` is null.
+    let status =
+        unsafe { upb_Decode(buf, len, msg, mini_table, core::ptr::null(), options, arena.raw()) };
+    match status {
+        DecodeStatus::Ok => Ok(()),
+        _ => Err(status),
+    }
+}
+Unixcoder Score: 0.03602468594908714
+--------------------------------------------------
+C_Code: 
+UPB_API_INLINE bool upb_JsonDecode(const char* buf, size_t size,
+                                   upb_Message* msg, const upb_MessageDef* m,
+                                   const upb_DefPool* symtab, int options,
+                                   upb_Arena* arena, upb_Status* status) {
+  return upb_JsonDecodeDetectingNonconformance(buf, size, msg, m, symtab,
+                                               options, arena, status) ==
+         kUpb_JsonDecodeResult_Ok;
+}
+Function: 
+pub unsafe fn decode(
+    buf: &[u8],
+    msg: RawMessage,
+    mini_table: *const upb_MiniTable,
+    arena: &Arena,
+) -> Result<(), DecodeStatus> {
+    let len = buf.len();
+    let buf = buf.as_ptr();
+    let options = DecodeOption::CheckRequired as i32;
+
+    // SAFETY:
+    // - `mini_table` is the one associated with `msg`
+    // - `buf` is legally readable for at least `buf_size` bytes.
+    // - `extreg` is null.
+    let status =
+        unsafe { upb_Decode(buf, len, msg, mini_table, core::ptr::null(), options, arena.raw()) };
+    match status {
+        DecodeStatus::Ok => Ok(()),
+        _ => Err(status),
+    }
+}
+Unixcoder Score: 0.02374192327260971
+--------------------------------------------------
+C_Code: 
+int upb_JsonDecodeDetectingNonconformance(const char* buf, size_t size,
+                                          upb_Message* msg,
+                                          const upb_MessageDef* m,
+                                          const upb_DefPool* symtab,
+                                          int options, upb_Arena* arena,
+                                          upb_Status* status) {
+  UPB_ASSERT(!upb_Message_IsFrozen(msg));
+  jsondec d;
+
+  if (size == 0) return true;
+
+  d.ptr = buf;
+  d.end = buf + size;
+  d.arena = arena;
+  d.symtab = symtab;
+  d.status = status;
+  d.options = options;
+  d.depth = 64;
+  d.result = kUpb_JsonDecodeResult_Ok;
+  d.line = 1;
+  d.line_begin = d.ptr;
+  d.debug_field = NULL;
+  d.is_first = false;
+
+  return upb_JsonDecoder_Decode(&d, msg, m);
+}
+Function: 
+pub unsafe fn decode(
+    buf: &[u8],
+    msg: RawMessage,
+    mini_table: *const upb_MiniTable,
+    arena: &Arena,
+) -> Result<(), DecodeStatus> {
+    let len = buf.len();
+    let buf = buf.as_ptr();
+    let options = DecodeOption::CheckRequired as i32;
+
+    // SAFETY:
+    // - `mini_table` is the one associated with `msg`
+    // - `buf` is legally readable for at least `buf_size` bytes.
+    // - `extreg` is null.
+    let status =
+        unsafe { upb_Decode(buf, len, msg, mini_table, core::ptr::null(), options, arena.raw()) };
+    match status {
+        DecodeStatus::Ok => Ok(()),
+        _ => Err(status),
+    }
+}
+Unixcoder Score: 0.01748470589518547
+--------------------------------------------------
+C_Code: 
+int upb_JsonDecodeDetectingNonconformance(const char* buf, size_t size,
+                                          upb_Message* msg,
+                                          const upb_MessageDef* m,
+                                          const upb_DefPool* symtab,
+                                          int options, upb_Arena* arena,
+                                          upb_Status* status) {
+  UPB_ASSERT(!upb_Message_IsFrozen(msg));
+  jsondec d;
+
+  if (size == 0) return true;
+
+  d.ptr = buf;
+  d.end = buf + size;
+  d.arena = arena;
+  d.symtab = symtab;
+  d.status = status;
+  d.options = options;
+  d.depth = 64;
+  d.result = kUpb_JsonDecodeResult_Ok;
+  d.line = 1;
+  d.line_begin = d.ptr;
+  d.debug_field = NULL;
+  d.is_first = false;
+
+  return upb_JsonDecoder_Decode(&d, msg, m);
+}
+Function: 
+pub unsafe fn decode(
+    buf: &[u8],
+    msg: RawMessage,
+    mini_table: *const upb_MiniTable,
+    arena: &Arena,
+) -> Result<(), DecodeStatus> {
+    let len = buf.len();
+    let buf = buf.as_ptr();
+    let options = DecodeOption::CheckRequired as i32;
+
+    // SAFETY:
+    // - `mini_table` is the one associated with `msg`
+    // - `buf` is legally readable for at least `buf_size` bytes.
+    // - `extreg` is null.
+    let status =
+        unsafe { upb_Decode(buf, len, msg, mini_table, core::ptr::null(), options, arena.raw()) };
+    match status {
+        DecodeStatus::Ok => Ok(()),
+        _ => Err(status),
+    }
+}
+Unixcoder Score: 0.014599159359931946
+--------------------------------------------------
+C_Code: 
+int upb_JsonDecodeDetectingNonconformance(const char* buf, size_t size,
+                                          upb_Message* msg,
+                                          const upb_MessageDef* m,
+                                          const upb_DefPool* symtab,
+                                          int options, upb_Arena* arena,
+                                          upb_Status* status) {
+  UPB_ASSERT(!upb_Message_IsFrozen(msg));
+  jsondec d;
+
+  if (size == 0) return true;
+
+  d.ptr = buf;
+  d.end = buf + size;
+  d.arena = arena;
+  d.symtab = symtab;
+  d.status = status;
+  d.options = options;
+  d.depth = 64;
+  d.result = kUpb_JsonDecodeResult_Ok;
+  d.line = 1;
+  d.line_begin = d.ptr;
+  d.debug_field = NULL;
+  d.is_first = false;
+
+  return upb_JsonDecoder_Decode(&d, msg, m);
+}
+Function: 
+pub unsafe fn decode(
+    buf: &[u8],
+    msg: RawMessage,
+    mini_table: *const upb_MiniTable,
+    arena: &Arena,
+) -> Result<(), DecodeStatus> {
+    let len = buf.len();
+    let buf = buf.as_ptr();
+    let options = DecodeOption::CheckRequired as i32;
+
+    // SAFETY:
+    // - `mini_table` is the one associated with `msg`
+    // - `buf` is legally readable for at least `buf_size` bytes.
+    // - `extreg` is null.
+    let status =
+        unsafe { upb_Decode(buf, len, msg, mini_table, core::ptr::null(), options, arena.raw()) };
+    match status {
+        DecodeStatus::Ok => Ok(()),
+        _ => Err(status),
+    }
+}
+Unixcoder Score: 0.0046869320794939995
+--------------------------------------------------
+C_Code: 
+int upb_JsonDecodeDetectingNonconformance(const char* buf, size_t size,
+                                          upb_Message* msg,
+                                          const upb_MessageDef* m,
+                                          const upb_DefPool* symtab,
+                                          int options, upb_Arena* arena,
+                                          upb_Status* status) {
+  UPB_ASSERT(!upb_Message_IsFrozen(msg));
+  jsondec d;
+
+  if (size == 0) return true;
+
+  d.ptr = buf;
+  d.end = buf + size;
+  d.arena = arena;
+  d.symtab = symtab;
+  d.status = status;
+  d.options = options;
+  d.depth = 64;
+  d.result = kUpb_JsonDecodeResult_Ok;
+  d.line = 1;
+  d.line_begin = d.ptr;
+  d.debug_field = NULL;
+  d.is_first = false;
+
+  return upb_JsonDecoder_Decode(&d, msg, m);
+}
+Function: 
+pub unsafe fn decode(
+    buf: &[u8],
+    msg: RawMessage,
+    mini_table: *const upb_MiniTable,
+    arena: &Arena,
+) -> Result<(), DecodeStatus> {
+    let len = buf.len();
+    let buf = buf.as_ptr();
+    let options = DecodeOption::CheckRequired as i32;
+
+    // SAFETY:
+    // - `mini_table` is the one associated with `msg`
+    // - `buf` is legally readable for at least `buf_size` bytes.
+    // - `extreg` is null.
+    let status =
+        unsafe { upb_Decode(buf, len, msg, mini_table, core::ptr::null(), options, arena.raw()) };
+    match status {
+        DecodeStatus::Ok => Ok(()),
+        _ => Err(status),
+    }
+}
+Unixcoder Score: 0.001880341675132513
+--------------------------------------------------
+C_Code: 
+UPB_API_INLINE bool upb_JsonDecode(const char* buf, size_t size,
+                                   upb_Message* msg, const upb_MessageDef* m,
+                                   const upb_DefPool* symtab, int options,
+                                   upb_Arena* arena, upb_Status* status) {
+  return upb_JsonDecodeDetectingNonconformance(buf, size, msg, m, symtab,
+                                               options, arena, status) ==
+         kUpb_JsonDecodeResult_Ok;
+}
+Function: 
+pub unsafe fn decode(
+    buf: &[u8],
+    msg: RawMessage,
+    mini_table: *const upb_MiniTable,
+    arena: &Arena,
+) -> Result<(), DecodeStatus> {
+    let len = buf.len();
+    let buf = buf.as_ptr();
+    let options = DecodeOption::CheckRequired as i32;
+
+    // SAFETY:
+    // - `mini_table` is the one associated with `msg`
+    // - `buf` is legally readable for at least `buf_size` bytes.
+    // - `extreg` is null.
+    let status =
+        unsafe { upb_Decode(buf, len, msg, mini_table, core::ptr::null(), options, arena.raw()) };
+    match status {
+        DecodeStatus::Ok => Ok(()),
+        _ => Err(status),
+    }
+}
+Unixcoder Score: 0.0016405537026003003
+--------------------------------------------------
+C_Code: 
+int upb_JsonDecodeDetectingNonconformance(const char* buf, size_t size,
+                                          upb_Message* msg,
+                                          const upb_MessageDef* m,
+                                          const upb_DefPool* symtab,
+                                          int options, upb_Arena* arena,
+                                          upb_Status* status) {
+  UPB_ASSERT(!upb_Message_IsFrozen(msg));
+  jsondec d;
+
+  if (size == 0) return true;
+
+  d.ptr = buf;
+  d.end = buf + size;
+  d.arena = arena;
+  d.symtab = symtab;
+  d.status = status;
+  d.options = options;
+  d.depth = 64;
+  d.result = kUpb_JsonDecodeResult_Ok;
+  d.line = 1;
+  d.line_begin = d.ptr;
+  d.debug_field = NULL;
+  d.is_first = false;
+
+  return upb_JsonDecoder_Decode(&d, msg, m);
+}
+Function: 
+pub unsafe fn decode(
+    buf: &[u8],
+    msg: RawMessage,
+    mini_table: *const upb_MiniTable,
+    arena: &Arena,
+) -> Result<(), DecodeStatus> {
+    let len = buf.len();
+    let buf = buf.as_ptr();
+    let options = DecodeOption::CheckRequired as i32;
+
+    // SAFETY:
+    // - `mini_table` is the one associated with `msg`
+    // - `buf` is legally readable for at least `buf_size` bytes.
+    // - `extreg` is null.
+    let status =
+        unsafe { upb_Decode(buf, len, msg, mini_table, core::ptr::null(), options, arena.raw()) };
+    match status {
+        DecodeStatus::Ok => Ok(()),
+        _ => Err(status),
+    }
+}
+Unixcoder Score: -0.0033501978032290936
+--------------------------------------------------
+C_Code: 
+int upb_JsonDecodeDetectingNonconformance(const char* buf, size_t size,
+                                          upb_Message* msg,
+                                          const upb_MessageDef* m,
+                                          const upb_DefPool* symtab,
+                                          int options, upb_Arena* arena,
+                                          upb_Status* status) {
+  UPB_ASSERT(!upb_Message_IsFrozen(msg));
+  jsondec d;
+
+  if (size == 0) return true;
+
+  d.ptr = buf;
+  d.end = buf + size;
+  d.arena = arena;
+  d.symtab = symtab;
+  d.status = status;
+  d.options = options;
+  d.depth = 64;
+  d.result = kUpb_JsonDecodeResult_Ok;
+  d.line = 1;
+  d.line_begin = d.ptr;
+  d.debug_field = NULL;
+  d.is_first = false;
+
+  return upb_JsonDecoder_Decode(&d, msg, m);
+}
+Function: 
+pub unsafe fn decode(
+    buf: &[u8],
+    msg: RawMessage,
+    mini_table: *const upb_MiniTable,
+    arena: &Arena,
+) -> Result<(), DecodeStatus> {
+    let len = buf.len();
+    let buf = buf.as_ptr();
+    let options = DecodeOption::CheckRequired as i32;
+
+    // SAFETY:
+    // - `mini_table` is the one associated with `msg`
+    // - `buf` is legally readable for at least `buf_size` bytes.
+    // - `extreg` is null.
+    let status =
+        unsafe { upb_Decode(buf, len, msg, mini_table, core::ptr::null(), options, arena.raw()) };
+    match status {
+        DecodeStatus::Ok => Ok(()),
+        _ => Err(status),
+    }
+}
+Unixcoder Score: -0.006842453498393297
+--------------------------------------------------
+C_Code: 
+int32_t CloudServiceStub::OnQueryLastSyncInfo(MessageParcel &data, MessageParcel &reply)
+{
+    std::string id;
+    std::string bundleName;
+    std::string storeId;
+    if (!ITypesUtil::Unmarshal(data, id, bundleName, storeId)) {
+        ZLOGE("Unmarshal id:%{public}s, bundleName:%{public}s, storeId:%{public}s", Anonymous::Change(id).c_str(),
+            bundleName.c_str(), Anonymous::Change(storeId).c_str());
+        return IPC_STUB_INVALID_DATA_ERR;
+    }
+    auto [status, results] = QueryLastSyncInfo(id, bundleName, storeId);
+    return ITypesUtil::Marshal(reply, status, results) ? ERR_NONE : IPC_STUB_WRITE_PARCEL_ERR;
+}
+Function: 
+fn deserialize(parcel: &mut MsgParcel) -> IpcResult<Self> {
+        let app_id = parcel.read_string16()?;
+        let bundle_name = parcel.read_string16()?;
+        let cloud_switch = parcel.read::<i32>()? != 0;
+        let instance_id = parcel.read::<i32>()?;
+
+        let result = Self {
+            app_id,
+            bundle_name,
+            cloud_switch,
+            instance_id,
+        };
+        Ok(result)
+    }
+Unixcoder Score: -0.026506414636969566
+--------------------------------------------------

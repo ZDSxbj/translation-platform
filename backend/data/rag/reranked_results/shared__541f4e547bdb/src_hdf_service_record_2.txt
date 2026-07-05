@@ -1,0 +1,323 @@
+C_Code: 
+void upb_arena_free(upb_arena *a) {
+  cleanup_ent *ent = a->cleanup_head;
+  mem_block *block = a->block_head;
+
+  while (ent) {
+    ent->cleanup(ent->ud);
+    ent = ent->next;
+  }
+
+  /* Must do this after running cleanup functions, because this will delete
+   * the memory we store our cleanup entries in! */
+  while (block) {
+    /* Load first since we are deleting block. */
+    mem_block *next = block->next;
+
+    if (block->owned) {
+      upb_free(a->block_alloc, block);
+    }
+
+    block = next;
+  }
+}
+Function: 
+fn drop(&mut self) {
+        unsafe {
+            upb_Arena_Free(self.raw);
+        }
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx7963_rank1.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx7963_rank1.rs", "c_api": "LLVMRustBuildAtomicLoad", "rust_api": "fetch_sub", "mapping_type": "function", "description": "Atomic load/store operation with memory ordering", "reasoning": "[Task Analysis] C function `LLVMRustBuildAtomicLoad` builds an atomic load instruction using LLVM IR builder, while Rust function `fetch_sub` performs an atomic subtraction using a raw FFI call. [Similarity] Names do not refer to the same concept (LLVM vs atomic operations), and domains are different (LLVM IR construction vs direct atomic operation). [Knowledge Extraction] No full or partial match due to domain mismatch and different semantic roles. However, both involve atomic operations, so API mapping is extracted."}]
+Unixcoder Score: 0.015349442139267921
+--------------------------------------------------
+C_Code: 
+ArenaImpl::ArenaImpl(const ArenaOptions& options) {
+  ArenaMetricsCollector* collector = nullptr;
+  bool record_allocs = false;
+  if (options.make_metrics_collector != nullptr) {
+    collector = (*options.make_metrics_collector)();
+    record_allocs = (collector && collector->RecordAllocs());
+  }
+
+  // Get memory where we can store non-default options if needed.
+  // Use supplied initial_block if it is large enough.
+  size_t min_block_size = kOptionsSize + kBlockHeaderSize + kSerialArenaSize;
+  char* mem = options.initial_block;
+  size_t mem_size = options.initial_block_size;
+  GOOGLE_DCHECK_EQ(reinterpret_cast<uintptr_t>(mem) & 7, 0);
+  if (mem == nullptr || mem_size < min_block_size) {
+    // Supplied initial block is not big enough.
+    mem_size = std::max(min_block_size, options.start_block_size);
+    mem = reinterpret_cast<char*>((*options.block_alloc)(mem_size));
+  }
+
+  // Create the special block.
+  const bool special = true;
+  const bool user_owned = (mem == options.initial_block);
+  auto block =
+      new (mem) SerialArena::Block(mem_size, nullptr, special, user_owned);
+
+  // Options occupy the beginning of the initial block.
+  options_ = new (block->Pointer(block->pos())) Options;
+#ifdef ADDRESS_SANITIZER
+  ASAN_UNPOISON_MEMORY_REGION(options_, kOptionsSize);
+#endif  // ADDRESS_SANITIZER
+  options_->start_block_size = options.start_block_size;
+  options_->max_block_size = options.max_block_size;
+  options_->block_alloc = options.block_alloc;
+  options_->block_dealloc = options.block_dealloc;
+  options_->metrics_collector = collector;
+  block->set_pos(block->pos() + kOptionsSize);
+
+  Init(record_allocs);
+  SetInitialBlock(block);
+}
+Function: 
+pub fn new() -> Self {
+        #[inline(never)]
+        #[cold]
+        fn arena_new_failed() -> ! {
+            panic!("Could not create a new UPB arena");
+        }
+
+        // SAFETY:
+        // - `upb_Arena_New` is assumed to be implemented correctly and always sound to
+        //   call; if it returned a non-null pointer, it is a valid arena.
+        unsafe {
+            let Some(raw) = upb_Arena_New() else { arena_new_failed() };
+            Self { raw, _not_sync: PhantomData }
+        }
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx130647_rank1.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx130647_rank1.rs", "c_api": "LLVMRustBuildAtomicLoad", "rust_api": "Load", "mapping_type": "function", "description": "Load value from memory location", "reasoning": "[Task Analysis] C function `LLVMRustBuildAtomicLoad` builds an atomic load instruction using LLVM IR builder, while Rust function `Load` builds a regular load instruction. [Similarity] Names do not refer to the same concept (`LLVMRustBuildAtomicLoad` vs `Load`), and the operations are semantically different (atomic vs regular load). [Knowledge Extraction] No full or partial match due to domain mismatch (LLVM IR construction vs high-level load abstraction). However, both involve loading values from memory, so there's a potential API mapping for 'load value from pointer'."}]
+Unixcoder Score: 0.01259272824972868
+--------------------------------------------------
+C_Code: 
+void upb_arena_free(upb_arena *a) {
+  cleanup_ent *ent = a->cleanup_head;
+  mem_block *block = a->block_head;
+
+  while (ent) {
+    ent->cleanup(ent->ud);
+    ent = ent->next;
+  }
+
+  /* Must do this after running cleanup functions, because this will delete
+   * the memory we store our cleanup entries in! */
+  while (block) {
+    /* Load first since we are deleting block. */
+    mem_block *next = block->next;
+
+    if (block->owned) {
+      upb_free(a->block_alloc, block);
+    }
+
+    block = next;
+  }
+}
+Function: 
+fn drop(&mut self) {
+        unsafe {
+            upb_Arena_Free(self.raw);
+        }
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx91236_rank1.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx91236_rank1.rs", "c_api": "LLVMRustBuildAtomicLoad", "rust_api": "atomic_load", "mapping_type": "function", "description": "Atomic load operation in LLVM IR builder vs interpreter", "reasoning": "[Task Analysis] C function is a LLVM IR builder function for atomic load, Rust function is a Rust interpreter function performing atomic load. [Similarity] Names do not refer to the same concept (LLVMRustBuildAtomicLoad vs atomic_load), and domains are different (LLVM IR construction vs interpreter execution). [Knowledge Extraction] No full or partial match due to domain mismatch and different semantic roles. However, both perform atomic load operations, so API mapping can be extracted."}]
+Unixcoder Score: -0.0018270857399329543
+--------------------------------------------------
+C_Code: 
+void
+memory_region::maybe_poison(void *mem) {
+
+    if (!_poison_on_free)
+        return;
+
+#   if RUSTRT_TRACK_ALLOCATIONS >= 1
+    alloc_header *alloc = get_header(mem);
+    memset(mem, '\xcd', alloc->size);
+#   endif
+}
+Function: 
+pub unsafe fn deallocate(ptr: *mut u8, _old_size: usize, align: usize) {
+        if align <= MIN_ALIGN {
+            let err = HeapFree(GetProcessHeap(), 0, ptr as LPVOID);
+            debug_assert!(err != 0);
+        } else {
+            let header = get_header(ptr);
+            let err = HeapFree(GetProcessHeap(), 0, header.0 as LPVOID);
+            debug_assert!(err != 0);
+        }
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx89985_rank1.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx89985_rank1.rs", "c_api": "LLVMValueRef", "rust_api": "AtomicU32", "mapping_type": "type", "description": "Atomic integer type", "reasoning": "[Task Analysis] C function builds an atomic load using LLVM IR builder; Rust function performs atomic read operations with threads. [Similarity] No direct structural similarity in control flow or data handling patterns. [Knowledge Extraction] C uses LLVM IR builder for atomic load creation; Rust uses atomic types and thread spawning for concurrent atomic reads. No full or partial match due to domain mismatch (LLVM IR vs. Rust concurrency). However, both involve atomic operations and memory access patterns, so API mappings can be extracted."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx89985_rank1.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx89985_rank1.rs", "c_api": "unwrap(B)->CreateLoad", "rust_api": "unsafe { x_ptr.read() }", "mapping_type": "function", "description": "Load memory value", "reasoning": "[Task Analysis] C function builds an atomic load using LLVM IR builder; Rust function performs atomic read operations with threads. [Similarity] No direct structural similarity in control flow or data handling patterns. [Knowledge Extraction] C uses LLVM IR builder for atomic load creation; Rust uses atomic types and thread spawning for concurrent atomic reads. No full or partial match due to domain mismatch (LLVM IR vs. Rust concurrency). However, both involve atomic operations and memory access patterns, so API mappings can be extracted."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx89985_rank1.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx89985_rank1.rs", "c_api": "LLVMAtomicOrdering", "rust_api": "Relaxed", "mapping_type": "pattern", "description": "Memory ordering constraint", "reasoning": "[Task Analysis] C function builds an atomic load using LLVM IR builder; Rust function performs atomic read operations with threads. [Similarity] No direct structural similarity in control flow or data handling patterns. [Knowledge Extraction] C uses LLVM IR builder for atomic load creation; Rust uses atomic types and thread spawning for concurrent atomic reads. No full or partial match due to domain mismatch (LLVM IR vs. Rust concurrency). However, both involve atomic operations and memory access patterns, so API mappings can be extracted."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx89985_rank1.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx89985_rank1.rs", "c_api": "LLVMRustBuildAtomicLoad", "rust_api": "x.load(Relaxed)", "mapping_type": "function", "description": "Atomic load operation", "reasoning": "[Task Analysis] C function builds an atomic load using LLVM IR builder; Rust function performs atomic read operations with threads. [Similarity] No direct structural similarity in control flow or data handling patterns. [Knowledge Extraction] C uses LLVM IR builder for atomic load creation; Rust uses atomic types and thread spawning for concurrent atomic reads. No full or partial match due to domain mismatch (LLVM IR vs. Rust concurrency). However, both involve atomic operations and memory access patterns, so API mappings can be extracted."}]
+Unixcoder Score: -0.031979188323020935
+--------------------------------------------------
+C_Code: 
+SizedPtr ThreadSafeArena::Free() {
+  auto deallocator = GetDeallocator(alloc_policy_.get());
+
+  WalkSerialArenaChunk([&](SerialArenaChunk* chunk) {
+    absl::Span<std::atomic<SerialArena*>> span = chunk->arenas();
+    // Walks arenas backward to handle the first serial arena the last. Freeing
+    // in reverse-order to the order in which objects were created may not be
+    // necessary to Free and we should revisit this. (b/247560530)
+    for (auto it = span.rbegin(); it != span.rend(); ++it) {
+      SerialArena* serial = it->load(std::memory_order_relaxed);
+      ABSL_DCHECK_NE(serial, nullptr);
+      // Always frees the first block of "serial" as it cannot be user-provided.
+      SizedPtr mem = serial->Free(deallocator);
+      ABSL_DCHECK_NE(mem.p, nullptr);
+      deallocator(mem);
+    }
+
+    // Delete the chunk as we're done with it.
+    internal::SizedDelete(chunk,
+                          SerialArenaChunk::AllocSize(chunk->capacity()));
+  });
+
+  // The first block of the first arena is special and let the caller handle it.
+  return first_arena_.Free(deallocator);
+}
+Function: 
+fn drop(&mut self) {
+        unsafe {
+            upb_Arena_Free(self.raw);
+        }
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx7962_rank1.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx7962_rank1.rs", "c_api": "LLVMRustBuildAtomicLoad", "rust_api": "fetch_add", "mapping_type": "function", "description": "Atomic memory load/store operation", "reasoning": "[Task Analysis] C function `LLVMRustBuildAtomicLoad` builds an atomic load instruction using LLVM IR builder, while Rust function `fetch_add` performs an atomic addition operation using unsafe FFI call. [Similarity] Both involve atomic operations on memory locations, but differ in scope and implementation details (LLVM IR construction vs direct atomic operation). [Knowledge Extraction] No full structural match due to domain mismatch (LLVM IR building vs direct atomic operation). However, both perform atomic memory operations, so API mapping is extracted."}]
+Unixcoder Score: -0.0333566814661026
+--------------------------------------------------
+C_Code: 
+void rust_kernel::free(void *mem) {
+    exchange_alloc.free(mem);
+}
+Function: 
+fn drop(&mut self) {
+        free_handle(self.handle);
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "Partial__free__idx77753_rank3.c", "source_rust_file": "Partial__free__idx77753_rank3.rs", "c_api": "exchange_alloc.free", "rust_api": "free_handle", "mapping_type": "function", "description": "Memory deallocation using custom allocator/handle mechanism", "reasoning": "[Task Analysis] C function `rust_kernel::free` and Rust function `drop` both handle memory deallocation. [Similarity] The core operation is memory deallocation, but the context and calling patterns differ: C `free` is a direct call to a custom allocator, while Rust `drop` is a destructor calling a handle-free function. [Knowledge Extraction] Names do not refer to the same concept (C: `free`, Rust: `drop`), and the domain is memory management, but the structural and semantic alignment is limited. No full match. Partial match exists in the memory deallocation pattern. API mapping identified between C `free` and Rust `free_handle` as both perform memory deallocation operations."}, {"knowledge_type": "Partial", "source_c_file": "Partial__free__idx77753_rank3.c", "source_rust_file": "Partial__free__idx77753_rank3.rs", "c_fragment": "exchange_alloc.free(mem)", "rust_fragment": "free_handle(self.handle)", "description": "Both perform memory deallocation operations using custom allocator/handle mechanisms.", "reasoning": "[Task Analysis] C function `rust_kernel::free` and Rust function `drop` both handle memory deallocation. [Similarity] The core operation is memory deallocation, but the context and calling patterns differ: C `free` is a direct call to a custom allocator, while Rust `drop` is a destructor calling a handle-free function. [Knowledge Extraction] Names do not refer to the same concept (C: `free`, Rust: `drop`), and the domain is memory management, but the structural and semantic alignment is limited. No full match. Partial match exists in the memory deallocation pattern. API mapping identified between C `free` and Rust `free_handle` as both perform memory deallocation operations."}]
+Unixcoder Score: -0.03570842742919922
+--------------------------------------------------
+C_Code: 
+struct rust_env {
+    size_t num_sched_threads;
+    size_t min_stack_size;
+    size_t max_stack_size;
+    char* logspec;
+    rust_bool detailed_leaks;
+    char* rust_seed;
+    rust_bool poison_on_free;
+    int argc;
+    char **argv;
+    rust_bool debug_mem;
+    rust_bool debug_borrow;
+}
+Function: 
+pub struct Bool {
+    b: bool,
+}
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx27805_rank5.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx27805_rank5.rs", "c_api": "LLVMRustBuildAtomicLoad", "rust_api": "compare_exchange", "mapping_type": "function", "description": "Atomic load operation with memory ordering", "reasoning": "[Filter 1: Entity Name Check] -> Names do not directly match ('LLVMRustBuildAtomicLoad' vs 'compare_exchange'), but both are atomic operations. [Filter 2: Empty/Trivial Code] -> Neither side is empty. [Filter 3: FFI Wrapper] -> Not a single FFI call. [Filter 4: Semantic Domain Mismatch] -> Both involve atomic operations, but C is LLVM IR builder while Rust is GCC backend; domains are different. [Filter 5: Empty Structs] -> Not applicable. [Filter 6: Definition vs Usage Asymmetry] -> C is a function definition, Rust is a method definition, but both are implementations, not calls. [Full BLOCKERS] -> Domain mismatch prevents Full classification. [Partial/Mapping Analysis] -> No direct structural match, but both perform atomic operations with similar parameters (ordering, values). [API Mappings] -> C's atomic load operation maps to Rust's atomic compare_exchange operation in terms of atomicity and memory ordering. [Keywords] -> atomic operation, LLVM, GCC, memory ordering, atomic load, compare exchange"}]
+Unixcoder Score: -0.03937271609902382
+--------------------------------------------------
+C_Code: 
+struct rust_env {
+    size_t num_sched_threads;
+    size_t min_stack_size;
+    size_t max_stack_size;
+    char* logspec;
+    rust_bool detailed_leaks;
+    char* rust_seed;
+    rust_bool poison_on_free;
+    int argc;
+    char **argv;
+    rust_bool debug_mem;
+    rust_bool debug_borrow;
+}
+Function: 
+pub struct Unstable2(pub u8,
+                     #[stable(feature = "rust1", since = "1.0.0")] pub u8,
+                     #[unstable(feature = "unstable_test_feature", issue = "none")]
+                     #[deprecated(since = "1.0.0", note = "text")] pub u8);
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx89519_rank2.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx89519_rank2.rs", "c_api": "LLVMRustBuildAtomicLoad", "rust_api": "AtomicBool::store", "mapping_type": "function", "description": "Atomic load operation in C maps to atomic boolean store in Rust", "reasoning": "[Task Analysis] C function is a LLVM IR builder operation for atomic load; Rust function creates a static atomic boolean. [Similarity] No structural similarity in control flow or data handling. [Knowledge Extraction] No full match, no partial match, but both involve atomic operations and memory management patterns. [API Mappings] C's atomic load operation maps to Rust's AtomicBool usage, though the specific APIs differ in purpose and context."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx89519_rank2.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx89519_rank2.rs", "c_api": "LLVMRustBuildAtomicLoad", "rust_api": "AtomicBool::new", "mapping_type": "function", "description": "Atomic load operation in C maps to atomic boolean initialization in Rust", "reasoning": "[Task Analysis] C function is a LLVM IR builder operation for atomic load; Rust function creates a static atomic boolean. [Similarity] No structural similarity in control flow or data handling. [Knowledge Extraction] No full match, no partial match, but both involve atomic operations and memory management patterns. [API Mappings] C's atomic load operation maps to Rust's AtomicBool usage, though the specific APIs differ in purpose and context."}]
+Unixcoder Score: -0.03953245282173157
+--------------------------------------------------
+C_Code: 
+void
+memory_region::maybe_poison(void *mem) {
+
+    if (!_poison_on_free)
+        return;
+
+#   if RUSTRT_TRACK_ALLOCATIONS >= 1
+    alloc_header *alloc = get_header(mem);
+    memset(mem, '\xcd', alloc->size);
+#   endif
+}
+Function: 
+pub fn new() -> LocalHeap {
+        unsafe {
+            // Don't need synchronization for the single-threaded local heap
+            let synchronized = false as uintptr_t;
+            // XXX: These usually come from the environment
+            let detailed_leaks = false as uintptr_t;
+            let poison_on_free = false as uintptr_t;
+            let region = rust_new_memory_region(synchronized, detailed_leaks, poison_on_free);
+            assert!(region.is_not_null());
+            let boxed = rust_new_boxed_region(region, poison_on_free);
+            assert!(boxed.is_not_null());
+            LocalHeap {
+                memory_region: region,
+                boxed_region: boxed
+            }
+        }
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx90596_rank2.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx90596_rank2.rs", "c_api": "LLVMRustBuildAtomicLoad", "rust_api": "AtomicUsize::new", "mapping_type": "function", "description": "Creation of atomic variable", "reasoning": "[Task Analysis] C function builds an atomic load instruction using LLVM IR builder; Rust code demonstrates atomic operations with threads and memory ordering. [Similarity] No structural similarity in control flow or logic. [Knowledge Extraction] No full match, no partial match, but there are API mappings related to atomic operations and memory ordering patterns."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx90596_rank2.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx90596_rank2.rs", "c_api": "LLVMAtomicOrdering", "rust_api": "Ordering::SeqCst", "mapping_type": "type", "description": "Memory ordering specification", "reasoning": "[Task Analysis] C function builds an atomic load instruction using LLVM IR builder; Rust code demonstrates atomic operations with threads and memory ordering. [Similarity] No structural similarity in control flow or logic. [Knowledge Extraction] No full match, no partial match, but there are API mappings related to atomic operations and memory ordering patterns."}, {"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx90596_rank2.c", "source_rust_file": "API_Mapping__LLVMRustBuildAtomicLoad__idx90596_rank2.rs", "c_api": "CreateLoad", "rust_api": "atomic_ref.store", "mapping_type": "method", "description": "Atomic load/store operation", "reasoning": "[Task Analysis] C function builds an atomic load instruction using LLVM IR builder; Rust code demonstrates atomic operations with threads and memory ordering. [Similarity] No structural similarity in control flow or logic. [Knowledge Extraction] No full match, no partial match, but there are API mappings related to atomic operations and memory ordering patterns."}]
+Unixcoder Score: -0.04589864984154701
+--------------------------------------------------
+C_Code: 
+struct rust_env {
+    size_t num_sched_threads;
+    size_t min_stack_size;
+    size_t max_stack_size;
+    char* logspec;
+    rust_bool detailed_leaks;
+    char* rust_seed;
+    rust_bool poison_on_free;
+    int argc;
+    char **argv;
+    rust_bool debug_mem;
+    rust_bool debug_borrow;
+}
+Function: 
+pub struct Environment {
+    /// The number of threads to use by default
+    num_sched_threads: size_t,
+    /// The minimum size of a stack segment
+    min_stack_size: size_t,
+    /// The maximum amount of total stack per task before aborting
+    max_stack_size: size_t,
+    /// The default logging configuration
+    logspec: *c_char,
+    /// Record and report detailed information about memory leaks
+    detailed_leaks: bool,
+    /// Seed the random number generator
+    rust_seed: *c_char,
+    /// Poison allocations on free
+    poison_on_free: bool,
+    /// The argc value passed to main
+    argc: c_int,
+    /// The argv value passed to main
+    argv: **c_char,
+    /// Print GC debugging info
+    debug_mem: bool
+}
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "Partial__LLVMRustBuildAtomicLoad__idx27871_rank1.c", "source_rust_file": "Partial__LLVMRustBuildAtomicLoad__idx27871_rank1.rs", "c_api": "LI->setAtomic(fromRust(Order))", "rust_api": "let ordering = self.context.new_rvalue_from_int(self.i32_type, order.to_gcc())", "mapping_type": "pattern", "description": "Setting atomic ordering constraint", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [Filter 1: Entity Name Check] -> [Filter 2: Empty/Trivial Code] -> [Filter 3: FFI Wrapper] -> [Filter 4: Semantic Domain Mismatch] -> [Filter 5: Empty Structs] -> [Filter 6: Definition vs Usage Asymmetry] -> [Full/Partial/API Analysis]"}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__LLVMRustBuildAtomicLoad__idx27871_rank1.c", "source_rust_file": "Partial__LLVMRustBuildAtomicLoad__idx27871_rank1.rs", "c_api": "wrap(LI)", "rust_api": "self.context.new_call(None, atomic_load, &[ptr, ordering])", "mapping_type": "function", "description": "Wrapping result of atomic load operation", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [Filter 1: Entity Name Check] -> [Filter 2: Empty/Trivial Code] -> [Filter 3: FFI Wrapper] -> [Filter 4: Semantic Domain Mismatch] -> [Filter 5: Empty Structs] -> [Filter 6: Definition vs Usage Asymmetry] -> [Full/Partial/API Analysis]"}, {"knowledge_type": "Partial", "source_c_file": "Partial__LLVMRustBuildAtomicLoad__idx27871_rank1.c", "source_rust_file": "Partial__LLVMRustBuildAtomicLoad__idx27871_rank1.rs", "c_fragment": "LLVMValueRef\nLLVMRustBuildAtomicLoad(LLVMBuilderRef B, LLVMTypeRef Ty, LLVMValueRef Source,\n                        const char *Name, LLVMAtomicOrdering Order) {\n  Value *Ptr = unwrap(Source);\n  LoadInst *LI = unwrap(B)->CreateLoad(unwrap(Ty), Ptr, Name);\n  LI->setAtomic(fromRust(Order));\n  return wrap(LI);\n}", "rust_fragment": "fn atomic_load(&mut self, _ty: Type<'gcc>, ptr: RValue<'gcc>, order: AtomicOrdering, size: Size) -> RValue<'gcc> {\n        // TODO(antoyo): use ty.\n        // TODO(antoyo): handle alignment.\n        let atomic_load = self.context.get_builtin_function(&format!(\"__atomic_load_{}\", size.bytes()));\n        let ordering = self.context.new_rvalue_from_int(self.i32_type, order.to_gcc());\n\n        let volatile_const_void_ptr_type = self.context.new_type::<()>()\n            .make_const()\n            .make_volatile()\n            .make_pointer();\n        let ptr = self.context.new_cast(None, ptr, volatile_const_void_ptr_type);\n        self.context.new_call(None, atomic_load, &[ptr, ordering])\n    }", "description": "Both functions perform atomic load operations on memory pointers with ordering constraints.", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [Filter 1: Entity Name Check] -> [Filter 2: Empty/Trivial Code] -> [Filter 3: FFI Wrapper] -> [Filter 4: Semantic Domain Mismatch] -> [Filter 5: Empty Structs] -> [Filter 6: Definition vs Usage Asymmetry] -> [Full/Partial/API Analysis]"}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__LLVMRustBuildAtomicLoad__idx27871_rank1.c", "source_rust_file": "Partial__LLVMRustBuildAtomicLoad__idx27871_rank1.rs", "c_api": "unwrap(B)->CreateLoad(unwrap(Ty), Ptr, Name)", "rust_api": "self.context.get_builtin_function(&format!(\"__atomic_load_{}\", size.bytes()))", "mapping_type": "function", "description": "Creating atomic load operation using built-in function", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [Filter 1: Entity Name Check] -> [Filter 2: Empty/Trivial Code] -> [Filter 3: FFI Wrapper] -> [Filter 4: Semantic Domain Mismatch] -> [Filter 5: Empty Structs] -> [Filter 6: Definition vs Usage Asymmetry] -> [Full/Partial/API Analysis]"}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__LLVMRustBuildAtomicLoad__idx27871_rank1.c", "source_rust_file": "Partial__LLVMRustBuildAtomicLoad__idx27871_rank1.rs", "c_api": "unwrap(Source)", "rust_api": "ptr", "mapping_type": "pattern", "description": "Extracting pointer value from wrapped representation", "reasoning": "[FFI Check] -> [Task Analysis] -> [Similarity] -> [Knowledge Extraction] -> [Filter 1: Entity Name Check] -> [Filter 2: Empty/Trivial Code] -> [Filter 3: FFI Wrapper] -> [Filter 4: Semantic Domain Mismatch] -> [Filter 5: Empty Structs] -> [Filter 6: Definition vs Usage Asymmetry] -> [Full/Partial/API Analysis]"}]
+Unixcoder Score: -0.05182819440960884
+--------------------------------------------------

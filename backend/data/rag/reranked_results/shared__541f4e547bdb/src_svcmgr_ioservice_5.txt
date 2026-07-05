@@ -1,0 +1,181 @@
+C_Code: 
+int32_t ISystemAbilityManagerMock::UnSubscribeSystemAbility(int32_t systemAbilityId,
+    const sptr<ISystemAbilityStatusChange>& listener)
+{
+    return 0;
+}
+Function: 
+pub fn remove_system_ability(said: i32) -> i32 {
+        info!("remove system ability {}", said);
+        RemoveSystemAbility(said)
+    }
+Unixcoder Score: 0.07868026942014694
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManager::UnSubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener)
+{
+    if (abilityStateScheduler_ == nullptr) {
+        HILOGE("abilityStateScheduler is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    return abilityStateScheduler_->UnSubscribeSystemProcess(listener);
+}
+Function: 
+pub fn unsubscribe(self) {
+        match self.inner {
+            Unsubscribe::Ability(mut p) => p.pin_mut().UnSubscribe(),
+            Unsubscribe::Process(mut p) => p.pin_mut().UnSubscribe(),
+        }
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "API_Mapping__HiSysEventRecycleWatcher__idx5559_rank5.c", "source_rust_file": "API_Mapping__HiSysEventRecycleWatcher__idx5559_rank5.rs", "c_api": "g_watchers.find", "rust_api": "sys_event_manager::add_watcher", "mapping_type": "function", "description": "Watcher lookup and registration", "reasoning": "[Task Analysis] C function processes a HiSysEvent watcher and performs lookup, recycling, and cleanup in a mutex-protected map. Rust function adds a watcher using a sys_event_manager API. [Similarity] No structural similarity in control flow or data handling patterns. [Knowledge Extraction] No full or partial match due to domain mismatch (C: low-level watcher management with mutex, Rust: high-level API call). However, both involve watcher-related operations and map-like data structures. [API Mappings] C uses std::make_pair and g_watchers.find/erase; Rust uses sys_event_manager::add_watcher. These are different operations but both relate to watcher management. Extracting API mapping based on semantic intent."}]
+Unixcoder Score: 0.05826834216713905
+--------------------------------------------------
+C_Code: 
+struct UdsListenerWrapper
+Function: 
+pub struct UdsListener {
+    state: Mutex<ChannelState>,
+}
+Unixcoder Score: 0.05205174535512924
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManager::SubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener)
+{
+    if (abilityStateScheduler_ == nullptr) {
+        HILOGE("abilityStateScheduler is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    return abilityStateScheduler_->SubscribeSystemProcess(listener);
+}
+Function: 
+pub fn subscribe_system_process(
+        on_start: fn(&SystemProcessInfo),
+        on_stop: fn(&SystemProcessInfo),
+    ) -> UnsubscribeHandler {
+        UnsubscribeHandler::new(Unsubscribe::Process(SubscribeSystemProcess(
+            on_start, on_stop,
+        )))
+    }
+Unixcoder Score: 0.03809834644198418
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManager::SubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener)
+{
+    if (abilityStateScheduler_ == nullptr) {
+        HILOGE("abilityStateScheduler is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    return abilityStateScheduler_->SubscribeSystemProcess(listener);
+}
+Function: 
+pub fn subscribe_system_process(
+        on_start: fn(&SystemProcessInfo),
+        on_stop: fn(&SystemProcessInfo),
+    ) -> UnsubscribeHandler {
+        UnsubscribeHandler::new(Unsubscribe::Process(SubscribeSystemProcess(
+            on_start, on_stop,
+        )))
+    }
+Unixcoder Score: 0.031127646565437317
+--------------------------------------------------
+C_Code: 
+struct UdsListenerWrapper
+Function: 
+struct Response {
+        taskId: String,
+        version: String,
+        statusCode: i32,
+        reason: String,
+        headers: Vec<String>,
+    }
+Unixcoder Score: 0.02009771578013897
+--------------------------------------------------
+C_Code: 
+void UnSubscribeSystemAbilityHandler::UnSubscribe()
+{
+    SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager()->UnSubscribeSystemAbility(said_, listener_);
+}
+Function: 
+pub fn unsubscribe(self) {
+        match self.inner {
+            Unsubscribe::Ability(mut p) => p.pin_mut().UnSubscribe(),
+            Unsubscribe::Process(mut p) => p.pin_mut().UnSubscribe(),
+        }
+    }
+Unixcoder Score: 0.013372442685067654
+--------------------------------------------------
+C_Code: 
+void RequestManagerImpl::RestoreListener(void (*callback)())
+{
+    callback_ = callback;
+}
+Function: 
+fn poll_download(
+        self: Pin<&mut Self>,
+        _cx: &mut Context<'_>,
+        data: &[u8],
+    ) -> Poll<Result<usize, HttpClientError>> {
+        let me = self.get_mut();
+        me.callback.common_data_receive(data, || {
+            me.headers.get("content-length").map(|v| v.parse().unwrap())
+        });
+        Poll::Ready(Ok(data.len()))
+    }
+Unixcoder Score: 0.013174097053706646
+--------------------------------------------------
+C_Code: 
+void RequestManagerImpl::RestoreListener(void (*callback)())
+{
+    callback_ = callback;
+}
+Function: 
+pub(super) fn run(
+        request: DownloadRequest,
+        mut callback: PrimeCallback,
+    ) -> Arc<dyn CommonHandle> {
+        let url = match PercentEncoder::encode(request.url) {
+            Ok(url) => url,
+            Err(e) => {
+                callback.common_fail(e);
+                return Arc::new(CancelHandle::new(Arc::new(AtomicBool::new(false))));
+            }
+        };
+        callback.set_running();
+        let flag = Arc::new(AtomicBool::new(false));
+        let handle = Arc::new(CancelHandle::new(flag.clone()));
+        let mut headers = None;
+        if let Some(h) = request.headers {
+            headers = Some(
+                h.iter()
+                    .map(|a| (a.0.to_string(), a.1.to_string()))
+                    .collect(),
+            );
+        }
+        ylong_runtime::spawn(async move {
+            if let Err(e) = download(url, headers, &mut callback, flag).await {
+                if e.error_kind() == ErrorKind::UserAborted {
+                    callback.common_cancel();
+                } else {
+                    callback.common_fail(e);
+                }
+            }
+        });
+        handle
+    }
+Unixcoder Score: 0.013002965599298477
+--------------------------------------------------
+C_Code: 
+void UnSubscribeSystemProcessHandler::UnSubscribe()
+{
+    SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager()->UnSubscribeSystemProcess(listener_);
+}
+Function: 
+pub fn unsubscribe(self) {
+        match self.inner {
+            Unsubscribe::Ability(mut p) => p.pin_mut().UnSubscribe(),
+            Unsubscribe::Process(mut p) => p.pin_mut().UnSubscribe(),
+        }
+    }
+Unixcoder Score: 0.00855694618076086
+--------------------------------------------------

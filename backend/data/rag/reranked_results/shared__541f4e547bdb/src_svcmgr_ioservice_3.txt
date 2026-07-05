@@ -1,0 +1,257 @@
+C_Code: 
+class Pass
+Function: 
+pub struct Glyph {
+    /// The Unicode codepoint or glyph ID of the item
+    pub codepoint: u32,
+    /// The index of the cluster in the input text where this came from
+    pub cluster: u32,
+    /// The horizontal advance of the glyph
+    pub x_advance: i32,
+    /// The vertical advance of the glyph
+    pub y_advance: i32,
+    /// The horizontal offset of the glyph
+    pub x_offset: i32,
+    /// The vertical offset of the glyph
+    pub y_offset: i32,
+    /// You can use this for whatever you like
+    pub flags: u32,
+}
+Unixcoder Score: 0.05498972907662392
+--------------------------------------------------
+C_Code: 
+class C
+Function: 
+struct CBufferContents {
+    length: u32,
+    info: *mut CGlyphInfo,
+    position: *mut CGlyphPosition,
+}
+Unixcoder Score: 0.020226523280143738
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManager::UnSubscribeSystemProcess(const sptr<ISystemProcessStatusChange>& listener)
+{
+    if (abilityStateScheduler_ == nullptr) {
+        HILOGE("abilityStateScheduler is nullptr");
+        return ERR_INVALID_VALUE;
+    }
+    return abilityStateScheduler_->UnSubscribeSystemProcess(listener);
+}
+Function: 
+pub fn unsubscribe(self) {
+        match self.inner {
+            Unsubscribe::Ability(mut p) => p.pin_mut().UnSubscribe(),
+            Unsubscribe::Process(mut p) => p.pin_mut().UnSubscribe(),
+        }
+    }
+Extracted_Knowledge: 
+[{"knowledge_type": "API_Mapping", "source_c_file": "Partial__upcall_rust_personality__idx76891_rank3.c", "source_rust_file": "Partial__upcall_rust_personality__idx76891_rank3.rs", "c_api": "rust_try", "rust_api": "rust_try", "mapping_type": "function", "description": "Exception handling wrapper", "reasoning": "[Filter 1: Entity Name Check] -> Names do not directly refer to the same concept; C has `upcall_rust_personality` and Rust has `try`, but they are different functions with different roles. [Filter 2: Empty/Trivial Code] -> Neither side is empty. [Filter 3: FFI Wrapper] -> Not a pure FFI wrapper. [Filter 4: Semantic Domain Mismatch] -> C function is about exception handling personality routine, Rust function is about try/catch logic. These are different domains (low-level unwinding vs high-level exception handling). [Filter 5: Empty Structs] -> Not applicable. [Filter 6: Definition vs Usage Asymmetry] -> C is a definition, Rust is a method definition, but not a direct usage match. However, both are implementations of exception handling logic. [Task Analysis] -> The task is to extract structural and API mappings between C and Rust exception handling mechanisms. [Similarity] -> There is no full structural similarity due to domain mismatch. [Knowledge Extraction] -> Extract partial structural fragments and API mappings based on shared logic patterns in exception handling."}, {"knowledge_type": "Partial", "source_c_file": "Partial__upcall_rust_personality__idx76891_rank3.c", "source_rust_file": "Partial__upcall_rust_personality__idx76891_rank3.rs", "c_fragment": "struct s_rust_personality_args args = {(_Unwind_Reason_Code)0,\n                                       version, actions, exception_class,\n                                       ue_header, context};\n    upcall_s_rust_personality(&args);\n    return args.retval;", "rust_fragment": "let ep = rust_try(try_fn, code, env);\n            if !ep.is_null() {\n                rtdebug!(\"Caught {}\", (*ep).exception_class);\n                _Unwind_DeleteException(ep);\n            }", "description": "Both handle exception propagation and cleanup after an exception is caught.", "reasoning": "[Filter 1: Entity Name Check] -> Names do not directly refer to the same concept; C has `upcall_rust_personality` and Rust has `try`, but they are different functions with different roles. [Filter 2: Empty/Trivial Code] -> Neither side is empty. [Filter 3: FFI Wrapper] -> Not a pure FFI wrapper. [Filter 4: Semantic Domain Mismatch] -> C function is about exception handling personality routine, Rust function is about try/catch logic. These are different domains (low-level unwinding vs high-level exception handling). [Filter 5: Empty Structs] -> Not applicable. [Filter 6: Definition vs Usage Asymmetry] -> C is a definition, Rust is a method definition, but not a direct usage match. However, both are implementations of exception handling logic. [Task Analysis] -> The task is to extract structural and API mappings between C and Rust exception handling mechanisms. [Similarity] -> There is no full structural similarity due to domain mismatch. [Knowledge Extraction] -> Extract partial structural fragments and API mappings based on shared logic patterns in exception handling."}, {"knowledge_type": "API_Mapping", "source_c_file": "Partial__upcall_rust_personality__idx76891_rank3.c", "source_rust_file": "Partial__upcall_rust_personality__idx76891_rank3.rs", "c_api": "_Unwind_DeleteException", "rust_api": "_Unwind_DeleteException", "mapping_type": "function", "description": "Exception object cleanup", "reasoning": "[Filter 1: Entity Name Check] -> Names do not directly refer to the same concept; C has `upcall_rust_personality` and Rust has `try`, but they are different functions with different roles. [Filter 2: Empty/Trivial Code] -> Neither side is empty. [Filter 3: FFI Wrapper] -> Not a pure FFI wrapper. [Filter 4: Semantic Domain Mismatch] -> C function is about exception handling personality routine, Rust function is about try/catch logic. These are different domains (low-level unwinding vs high-level exception handling). [Filter 5: Empty Structs] -> Not applicable. [Filter 6: Definition vs Usage Asymmetry] -> C is a definition, Rust is a method definition, but not a direct usage match. However, both are implementations of exception handling logic. [Task Analysis] -> The task is to extract structural and API mappings between C and Rust exception handling mechanisms. [Similarity] -> There is no full structural similarity due to domain mismatch. [Knowledge Extraction] -> Extract partial structural fragments and API mappings based on shared logic patterns in exception handling."}]
+Unixcoder Score: 0.012659353204071522
+--------------------------------------------------
+C_Code: 
+class SPIRV_TOOLS_EXPORT
+Function: 
+struct BufferSizes {
+        // Known size buffers
+        path_reduced: u32,
+        path_reduced2: u32,
+        path_reduced_scan: u32,
+        path_monoids: u32,
+        path_bboxes: u32,
+        draw_reduced: u32,
+        draw_monoids: u32,
+        info: u32,
+        clip_inps: u32,
+        clip_els: u32,
+        clip_bics: u32,
+        clip_bboxes: u32,
+        draw_bboxes: u32,
+        bump_alloc: u32,
+        indirect_count: u32,
+        bin_headers: u32,
+        paths: u32,
+        // Bump allocated buffers
+        lines: u32,
+        bin_data: u32,
+        tiles: u32,
+        seg_counts: u32,
+        segments: u32,
+        ptcl: u32,
+    }
+Unixcoder Score: 0.0028556804172694683
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManager::UnSubscribeSystemAbility(int32_t systemAbilityId,
+    const sptr<ISystemAbilityStatusChange>& listener)
+{
+    if (!CheckInputSysAbilityId(systemAbilityId) || listener == nullptr) {
+        HILOGW("UnSubscribeSA saId or listener invalid");
+        return ERR_INVALID_VALUE;
+    }
+
+    auto callingPid = IPCSkeleton::GetCallingPid();
+    lock_guard<samgr::mutex> autoLock(listenerMapLock_);
+    auto& listeners = listenerMap_[systemAbilityId];
+    UnSubscribeSystemAbilityLocked(listeners, listener->AsObject());
+    if (abilityStatusDeath_ != nullptr) {
+        listener->AsObject()->RemoveDeathRecipient(abilityStatusDeath_);
+    }
+    HILOGI("UnSubscribeSA:%{public}d_%{public}d_%{public}zu", systemAbilityId, callingPid, listeners.size());
+    return ERR_OK;
+}
+Function: 
+pub fn unsubscribe(self) {
+        match self.inner {
+            Unsubscribe::Ability(mut p) => p.pin_mut().UnSubscribe(),
+            Unsubscribe::Process(mut p) => p.pin_mut().UnSubscribe(),
+        }
+    }
+Unixcoder Score: -0.0006028063362464309
+--------------------------------------------------
+C_Code: 
+class Buffer
+Function: 
+struct BufferSizes {
+        // Known size buffers
+        path_reduced: u32,
+        path_reduced2: u32,
+        path_reduced_scan: u32,
+        path_monoids: u32,
+        path_bboxes: u32,
+        draw_reduced: u32,
+        draw_monoids: u32,
+        info: u32,
+        clip_inps: u32,
+        clip_els: u32,
+        clip_bics: u32,
+        clip_bboxes: u32,
+        draw_bboxes: u32,
+        bump_alloc: u32,
+        indirect_count: u32,
+        bin_headers: u32,
+        paths: u32,
+        // Bump allocated buffers
+        lines: u32,
+        bin_data: u32,
+        tiles: u32,
+        seg_counts: u32,
+        segments: u32,
+        ptcl: u32,
+    }
+Unixcoder Score: -0.0010764140170067549
+--------------------------------------------------
+C_Code: 
+class SPIRV_TOOLS_EXPORT
+Function: 
+struct BufferSizes {
+        // Known size buffers
+        path_reduced: u32,
+        path_reduced2: u32,
+        path_reduced_scan: u32,
+        path_monoids: u32,
+        path_bboxes: u32,
+        draw_reduced: u32,
+        draw_monoids: u32,
+        info: u32,
+        clip_inps: u32,
+        clip_els: u32,
+        clip_bics: u32,
+        clip_bboxes: u32,
+        draw_bboxes: u32,
+        bump_alloc: u32,
+        indirect_count: u32,
+        bin_headers: u32,
+        paths: u32,
+        // Bump allocated buffers
+        lines: u32,
+        bin_data: u32,
+        tiles: u32,
+        seg_counts: u32,
+        segments: u32,
+        ptcl: u32,
+    }
+Unixcoder Score: -0.0014598992420360446
+--------------------------------------------------
+C_Code: 
+class SPIRV_TOOLS_EXPORT
+Function: 
+struct BufferSizes {
+        // Known size buffers
+        path_reduced: u32,
+        path_reduced2: u32,
+        path_reduced_scan: u32,
+        path_monoids: u32,
+        path_bboxes: u32,
+        draw_reduced: u32,
+        draw_monoids: u32,
+        info: u32,
+        clip_inps: u32,
+        clip_els: u32,
+        clip_bics: u32,
+        clip_bboxes: u32,
+        draw_bboxes: u32,
+        bump_alloc: u32,
+        indirect_count: u32,
+        bin_headers: u32,
+        paths: u32,
+        // Bump allocated buffers
+        lines: u32,
+        bin_data: u32,
+        tiles: u32,
+        seg_counts: u32,
+        segments: u32,
+        ptcl: u32,
+    }
+Unixcoder Score: -0.002243615919724107
+--------------------------------------------------
+C_Code: 
+class SPIRV_TOOLS_EXPORT
+Function: 
+pub struct Glyph {
+    /// The Unicode codepoint or glyph ID of the item
+    pub codepoint: u32,
+    /// The index of the cluster in the input text where this came from
+    pub cluster: u32,
+    /// The horizontal advance of the glyph
+    pub x_advance: i32,
+    /// The vertical advance of the glyph
+    pub y_advance: i32,
+    /// The horizontal offset of the glyph
+    pub x_offset: i32,
+    /// The vertical offset of the glyph
+    pub y_offset: i32,
+    /// You can use this for whatever you like
+    pub flags: u32,
+}
+Unixcoder Score: -0.004112171940505505
+--------------------------------------------------
+C_Code: 
+class SPIRV_TOOLS_EXPORT
+Function: 
+struct DispatchInfo {
+        use_large_path_scan: bool,
+
+        // Dispatch workgroup counts for each pipeline
+        path_reduce: WorkgroupSize,
+        path_reduce2: WorkgroupSize,
+        path_scan1: WorkgroupSize,
+        path_scan: WorkgroupSize,
+        bbox_clear: WorkgroupSize,
+        flatten: WorkgroupSize,
+        draw_reduce: WorkgroupSize,
+        draw_leaf: WorkgroupSize,
+        clip_reduce: WorkgroupSize,
+        clip_leaf: WorkgroupSize,
+        binning: WorkgroupSize,
+        tile_alloc: WorkgroupSize,
+        path_count_setup: WorkgroupSize,
+        // Note: `path_count` must use an indirect dispatch
+        backdrop: WorkgroupSize,
+        coarse: WorkgroupSize,
+        path_tiling_setup: WorkgroupSize,
+        // Note: `path_tiling` must use an indirect dispatch
+        fine: WorkgroupSize,
+    }
+Unixcoder Score: -0.004956055898219347
+--------------------------------------------------

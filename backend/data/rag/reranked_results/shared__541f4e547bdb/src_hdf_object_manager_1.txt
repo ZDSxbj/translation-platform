@@ -1,0 +1,188 @@
+C_Code: 
+rust::string IRemoteObjectWrapper::GetObjectDescriptor() const
+{
+    return GetInner()->GetObjectDescriptor().data();
+}
+Function: 
+pub fn interface_descriptor(&self) -> IpcResult<String> {
+        Ok(self.inner.GetInterfaceDescriptor())
+    }
+Unixcoder Score: -0.0005903749261051416
+--------------------------------------------------
+C_Code: 
+rust::string IRemoteObjectWrapper::GetObjectDescriptor() const
+{
+    return GetInner()->GetObjectDescriptor().data();
+}
+Function: 
+pub fn object_descriptor(&self) -> IpcResult<String> {
+        Ok(self.inner.GetObjectDescriptor())
+    }
+Unixcoder Score: -0.013727648183703423
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManagerStub::GetSystemAbilityInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t systemAbilityId = -1;
+    bool ret = data.ReadInt32(systemAbilityId);
+    if (!ret) {
+        return ERR_NULL_OBJECT;
+    }
+    if (!CheckInputSysAbilityId(systemAbilityId)) {
+        HILOGW("GetSystemAbilityInner read SAId failed!");
+        return ERR_NULL_OBJECT;
+    }
+
+#ifdef SUPPORT_PENGLAI_MODE
+    if (isPengLai_ && !SamgrUtil::CheckPengLaiPermission(systemAbilityId)) {
+        HILOGW("GetSA CheckPengLaiPermission denied! SA:%{public}d,callUid:%{public}d",
+            systemAbilityId, OHOS::IPCSkeleton::GetCallingUid());
+        return ERR_PERMISSION_DENIED;
+    }
+#endif
+
+    if (!CheckGetSAPermission(systemAbilityId)) {
+        HILOGE("GetSystemAbilityInner selinux permission denied! SA:%{public}d,callSid:%{public}s",
+            systemAbilityId, OHOS::IPCSkeleton::GetCallingSid().c_str());
+        return ERR_PERMISSION_DENIED;
+    }
+    sptr<IRemoteObject> remoteObject = GetSystemAbility(systemAbilityId);
+    if (remoteObject == nullptr) {
+        HILOGD("GetSystemAbilityInner SA:%{public}d GetSystemAbility failed.", systemAbilityId);
+        return ERR_NULL_OBJECT;
+    }
+    ret = reply.WriteRemoteObject(remoteObject);
+    if (!ret) {
+        HILOGE("GetSystemAbilityInner SA:%{public}d write reply failed.", systemAbilityId);
+        return ERR_FLATTEN_OBJECT;
+    }
+    return ERR_NONE;
+}
+Function: 
+pub fn get_system_ability(said: i32) -> Option<RemoteObj> {
+        info!("get system ability {}", said);
+        RemoteObj::from_sptr(GetSystemAbility(said))
+    }
+Unixcoder Score: -0.0187324620783329
+--------------------------------------------------
+C_Code: 
+rust::string IRemoteObjectWrapper::GetObjectDescriptor() const
+{
+    return GetInner()->GetObjectDescriptor().data();
+}
+Function: 
+pub fn descriptor(&self) -> &'static str {
+        self.inner.descriptor()
+    }
+Unixcoder Score: -0.02037077583372593
+--------------------------------------------------
+C_Code: 
+rust::string IRemoteObjectWrapper::GetObjectDescriptor() const
+{
+    return GetInner()->GetObjectDescriptor().data();
+}
+Function: 
+pub fn object_descriptor(&self) -> IpcResult<String> {
+        Ok(self.inner.GetObjectDescriptor())
+    }
+Unixcoder Score: -0.022480495274066925
+--------------------------------------------------
+C_Code: 
+int32_t SystemAbilityManagerStub::GetSystemAbilityInner(MessageParcel& data, MessageParcel& reply)
+{
+    int32_t systemAbilityId = -1;
+    bool ret = data.ReadInt32(systemAbilityId);
+    if (!ret) {
+        return ERR_NULL_OBJECT;
+    }
+    if (!CheckInputSysAbilityId(systemAbilityId)) {
+        HILOGW("GetSystemAbilityInner read SAId failed!");
+        return ERR_NULL_OBJECT;
+    }
+
+#ifdef SUPPORT_PENGLAI_MODE
+    if (isPengLai_ && !SamgrUtil::CheckPengLaiPermission(systemAbilityId)) {
+        HILOGW("GetSA CheckPengLaiPermission denied! SA:%{public}d,callUid:%{public}d",
+            systemAbilityId, OHOS::IPCSkeleton::GetCallingUid());
+        return ERR_PERMISSION_DENIED;
+    }
+#endif
+
+    if (!CheckGetSAPermission(systemAbilityId)) {
+        HILOGE("GetSystemAbilityInner selinux permission denied! SA:%{public}d,callSid:%{public}s",
+            systemAbilityId, OHOS::IPCSkeleton::GetCallingSid().c_str());
+        return ERR_PERMISSION_DENIED;
+    }
+    sptr<IRemoteObject> remoteObject = GetSystemAbility(systemAbilityId);
+    if (remoteObject == nullptr) {
+        HILOGD("GetSystemAbilityInner SA:%{public}d GetSystemAbility failed.", systemAbilityId);
+        return ERR_NULL_OBJECT;
+    }
+    ret = reply.WriteRemoteObject(remoteObject);
+    if (!ret) {
+        HILOGE("GetSystemAbilityInner SA:%{public}d write reply failed.", systemAbilityId);
+        return ERR_FLATTEN_OBJECT;
+    }
+    return ERR_NONE;
+}
+Function: 
+pub fn get_system_ability(said: i32) -> Option<RemoteObj> {
+        info!("get system ability {}", said);
+        RemoteObj::from_sptr(GetSystemAbility(said))
+    }
+Unixcoder Score: -0.023269256576895714
+--------------------------------------------------
+C_Code: 
+rust::string IRemoteObjectWrapper::GetObjectDescriptor() const
+{
+    return GetInner()->GetObjectDescriptor().data();
+}
+Function: 
+pub fn interface_descriptor(&self) -> IpcResult<String> {
+        Ok(self.inner.GetInterfaceDescriptor())
+    }
+Unixcoder Score: -0.02327059768140316
+--------------------------------------------------
+C_Code: 
+rust::string IRemoteObjectWrapper::GetObjectDescriptor() const
+{
+    return GetInner()->GetObjectDescriptor().data();
+}
+Function: 
+pub fn interface_descriptor(&self) -> IpcResult<String> {
+        Ok(self.inner.GetInterfaceDescriptor())
+    }
+Unixcoder Score: -0.026280097663402557
+--------------------------------------------------
+C_Code: 
+std::unique_ptr<SptrIRemoteObject> GetSystemAbility(int32_t systemAbilityId)
+{
+    auto sysm = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (sysm == nullptr) {
+        return nullptr;
+    }
+
+    auto ability = sysm->GetSystemAbility(systemAbilityId);
+    if (ability == nullptr) {
+        return nullptr;
+    }
+    return std::make_unique<SptrIRemoteObject>(std::move(ability));
+}
+Function: 
+pub fn get_system_ability(said: i32) -> Option<RemoteObj> {
+        info!("get system ability {}", said);
+        RemoteObj::from_sptr(GetSystemAbility(said))
+    }
+Unixcoder Score: -0.02636338584125042
+--------------------------------------------------
+C_Code: 
+rust::string IRemoteObjectWrapper::GetObjectDescriptor() const
+{
+    return GetInner()->GetObjectDescriptor().data();
+}
+Function: 
+pub fn object_descriptor(&self) -> IpcResult<String> {
+        Ok(self.inner.GetObjectDescriptor())
+    }
+Unixcoder Score: -0.027148671448230743
+--------------------------------------------------

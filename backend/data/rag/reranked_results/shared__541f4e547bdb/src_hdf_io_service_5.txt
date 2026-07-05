@@ -1,0 +1,431 @@
+C_Code: 
+int32_t RpcOnRemoteRequestInner(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option,
+    IpcObjectStub *objectStub)
+{
+    int32_t result;
+    switch (code) {
+        case INVOKE_LISTEN_THREAD: {
+            result = InvokerListenThreadStub(code, data, reply, option, objectStub->func);
+            break;
+            }
+        case GET_UIDPID_INFO: {
+            result = GetPidAndUidInfoStub(code, data, reply, option);
+            break;
+        }
+        case GRANT_DATABUS_NAME: {
+            result = GrantDataBusNameStub(code, data, reply, option);
+            break;
+        }
+        default:
+            result = ERR_NOT_RPC;
+            break;
+    }
+    return result;
+}
+Function: 
+pub fn send_request(&self, code: u32, data: &mut MsgParcel) -> IpcResult<MsgParcel> {
+        let mut reply = MsgParcel::new();
+        let mut option = MsgOption::new();
+        match mem::replace(&mut data.inner, ParcelMem::Null) {
+            ParcelMem::Unique(mut p) => {
+                let res = self.inner.SendRequest(
+                    code,
+                    p.pin_mut(),
+                    reply.pin_mut().unwrap(),
+                    option.inner.pin_mut(),
+                );
+                data.inner = ParcelMem::Unique(p);
+                match res {
+                    0 => Ok(reply),
+                    29189 => Err(IpcStatusCode::ServiceDied),
+                    _ => Err(IpcStatusCode::Failed),
+                }
+            }
+            _ => Err(IpcStatusCode::Failed),
+        }
+    }
+Unixcoder Score: 0.100135937333107
+--------------------------------------------------
+C_Code: 
+int32_t RemoteRequestOne(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option)
+{
+    int32_t result = ERR_NONE;
+    int32_t a = 0;
+    int32_t b = 0;
+    RPC_LOG_INFO("server OnRemoteRequestOne called....");
+    switch (code) {
+        case OP_ADD:
+        case OP_SUB:
+        case OP_MULTI:
+        case OP_DIVISION: {
+            ReadInt32(data, &a);
+            ReadInt32(data, &b);
+            result = Calculator(code, a, b, reply);
+            break;
+        }
+        case OP_SERIALIZER: {
+            WriteInt32(reply, ERR_NONE);
+            result = ERR_NONE;
+            break;
+        }
+        default: {
+            RPC_LOG_ERROR("unknown code %u", code);
+            result = ERR_INVALID_PARAM;
+            WriteInt32(reply, ERR_INVALID_PARAM);
+            break;
+        }
+    }
+    return result;
+}
+Function: 
+fn calculator_ability() {
+    let remote = get_calc_service();
+    // add
+    let ret = remote.add(5, 5).expect("add failed");
+    assert_eq!(ret, 10);
+    // sub
+    let ret = remote.sub(5, 5).expect("sub failed");
+    assert_eq!(ret, 0);
+    // mul
+    let ret = remote.mul(5, 5).expect("mul failed");
+    assert_eq!(ret, 25);
+    // div
+    let ret = remote.div(5, 5).expect("div failed");
+    assert_eq!(ret, 1);
+}
+Unixcoder Score: 0.09774155914783478
+--------------------------------------------------
+C_Code: 
+static int32_t RemoteRequest(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option)
+{
+    int32_t result = ERR_NONE;
+    RPC_LOG_INFO("OnRemoteRequest called.... code = %u", code);
+    switch (code) {
+        case ADD_SYSTEM_ABILITY_TRANSACTION: {
+            int32_t saId;
+            ReadInt32(data, &saId);
+            SvcIdentity *sid = (SvcIdentity *)malloc(sizeof(SvcIdentity));
+            if (sid == NULL) {
+                return ERR_FAILED;
+            }
+            ReadRemoteObject(data, sid);
+            result = AddSystemAbility(saId, sid);
+            if (result != ERR_NONE) {
+                return result;
+            }
+            WriteInt32(reply, result);
+            break;
+        }
+        case GET_SYSTEM_ABILITY_TRANSACTION: {
+            int32_t saId;
+            ReadInt32(data, &saId);
+            SvcIdentity sid;
+            result = GetSystemAbility(saId, "", &sid);
+            if (result != ERR_NONE) {
+                return result;
+            }
+            WriteRemoteObject(reply, &sid);
+            break;
+        }
+        default:
+            RPC_LOG_ERROR("unknown code %u", code);
+            break;
+    }
+    return result;
+}
+Function: 
+fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+        match code {
+            0 => {
+                parcel_remote_primitive(data, reply);
+                parcel_remote_vec(data, reply);
+            }
+            _ => unreachable!(),
+        }
+        0
+    }
+Unixcoder Score: 0.09661567956209183
+--------------------------------------------------
+C_Code: 
+static int32_t RemoteRequest(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option)
+{
+    int32_t result = ERR_NONE;
+    RPC_LOG_INFO("OnRemoteRequest called.... code = %u", code);
+    switch (code) {
+        case ADD_SYSTEM_ABILITY_TRANSACTION: {
+            int32_t saId;
+            ReadInt32(data, &saId);
+            SvcIdentity *sid = (SvcIdentity *)malloc(sizeof(SvcIdentity));
+            if (sid == NULL) {
+                return ERR_FAILED;
+            }
+            ReadRemoteObject(data, sid);
+            result = AddSystemAbility(saId, sid);
+            if (result != ERR_NONE) {
+                return result;
+            }
+            WriteInt32(reply, result);
+            break;
+        }
+        case GET_SYSTEM_ABILITY_TRANSACTION: {
+            int32_t saId;
+            ReadInt32(data, &saId);
+            SvcIdentity sid;
+            result = GetSystemAbility(saId, "", &sid);
+            if (result != ERR_NONE) {
+                return result;
+            }
+            WriteRemoteObject(reply, &sid);
+            break;
+        }
+        default:
+            RPC_LOG_ERROR("unknown code %u", code);
+            break;
+    }
+    return result;
+}
+Function: 
+fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+        R::on_remote_request(self, code, data, reply)
+    }
+Unixcoder Score: 0.09644883126020432
+--------------------------------------------------
+C_Code: 
+int32_t RemoteRequestOne(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option)
+{
+    int32_t result = ERR_NONE;
+    int32_t a = 0;
+    int32_t b = 0;
+    RPC_LOG_INFO("server OnRemoteRequestOne called....");
+    switch (code) {
+        case OP_ADD:
+        case OP_SUB:
+        case OP_MULTI:
+        case OP_DIVISION: {
+            ReadInt32(data, &a);
+            ReadInt32(data, &b);
+            result = Calculator(code, a, b, reply);
+            break;
+        }
+        case OP_SERIALIZER: {
+            WriteInt32(reply, ERR_NONE);
+            result = ERR_NONE;
+            break;
+        }
+        default: {
+            RPC_LOG_ERROR("unknown code %u", code);
+            result = ERR_INVALID_PARAM;
+            WriteInt32(reply, ERR_INVALID_PARAM);
+            break;
+        }
+    }
+    return result;
+}
+Function: 
+fn on_icalc_remote_request(stub: &dyn ICalc, code: u32, data: &BorrowedMsgParcel,
+    reply: &mut BorrowedMsgParcel) -> IpcResult<()> {
+    match code.try_into()? {
+        ICalcCode::CodeAdd => {
+            let num1: i32 = data.read().expect("Failed to read num1 in addition operation");
+            let num2: i32 = data.read().expect("Failed to read num2 in addition operation");
+            let ret = stub.add(num1, num2)?;
+            reply.write(&ret)?;
+            Ok(())
+        }
+        ICalcCode::CodeSub => {
+            let num1: i32 = data.read().expect("Failed to read num1 in subtraction operation");
+            let num2: i32 = data.read().expect("Failed to read num1 in subtraction operation");
+            let ret = stub.sub(num1, num2)?;
+            reply.write(&ret)?;
+            Ok(())
+        }
+        ICalcCode::CodeMul => {
+            let num1: i32 = data.read().expect("Failed to read num1 in multiplication operation");
+            let num2: i32 = data.read().expect("Failed to read num1 in multiplication operation");
+            let ret = stub.mul(num1, num2)?;
+            reply.write(&ret)?;
+            Ok(())
+        }
+        ICalcCode::CodeDiv => {
+            let num1: i32 = data.read().expect("Failed to read num1 in division  operation");
+            let num2: i32 = data.read().expect("Failed to read num1 in division  operation");
+            let ret = stub.div(num1, num2)?;
+            reply.write(&ret)?;
+            Ok(())
+        }
+    }
+}
+Unixcoder Score: 0.08861403167247772
+--------------------------------------------------
+C_Code: 
+static int32_t RemoteRequest(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option)
+{
+    int32_t result = ERR_NONE;
+    RPC_LOG_INFO("OnRemoteRequest called.... code = %u", code);
+    switch (code) {
+        case ADD_SYSTEM_ABILITY_TRANSACTION: {
+            int32_t saId;
+            ReadInt32(data, &saId);
+            SvcIdentity *sid = (SvcIdentity *)malloc(sizeof(SvcIdentity));
+            if (sid == NULL) {
+                return ERR_FAILED;
+            }
+            ReadRemoteObject(data, sid);
+            result = AddSystemAbility(saId, sid);
+            if (result != ERR_NONE) {
+                return result;
+            }
+            WriteInt32(reply, result);
+            break;
+        }
+        case GET_SYSTEM_ABILITY_TRANSACTION: {
+            int32_t saId;
+            ReadInt32(data, &saId);
+            SvcIdentity sid;
+            result = GetSystemAbility(saId, "", &sid);
+            if (result != ERR_NONE) {
+                return result;
+            }
+            WriteRemoteObject(reply, &sid);
+            break;
+        }
+        default:
+            RPC_LOG_ERROR("unknown code %u", code);
+            break;
+    }
+    return result;
+}
+Function: 
+fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+            0
+        }
+Unixcoder Score: 0.08418384939432144
+--------------------------------------------------
+C_Code: 
+int32_t RemoteRequest(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option)
+{
+    int32_t result = ERR_NONE;
+    RPC_LOG_INFO("OnRemoteRequest called.... code = %u", code);
+    switch (code) {
+        case GET_SYSTEM_ABILITY_TRANSACTION: {
+            result = GetSystemAbilityTransaction(data, reply);
+            break;
+        }
+        case ADD_SYSTEM_ABILITY_TRANSACTION: {
+            int32_t saId;
+            ReadInt32(data, &saId);
+            SvcIdentity *sid = (SvcIdentity *)malloc(sizeof(SvcIdentity));
+            if (sid == nullptr) {
+                result = ERR_FAILED;
+                break;
+            }
+            ReadRemoteObject(data, sid);
+            result = AddSystemAbility(saId, sid);
+            break;
+        }
+        case GET_REMOTE_SYSTEM_ABILITY_TRANSACTION: {
+            SvcIdentity sid;
+            result = GetRemoteSystemAbility(data, &sid);
+            if (result != ERR_NONE) {
+                WriteInt32(reply, result);
+            } else {
+                WriteRemoteObject(reply, &sid);
+            }
+            break;
+        }
+        case ADD_REMOTE_SYSTEM_ABILITY_TRANSACTION: {
+            result = AddRemoteSystemAbilityTransaction(data, reply);
+            break;
+        }
+        default:
+            RPC_LOG_ERROR("unknown code %u", code);
+            break;
+    }
+    return result;
+}
+Function: 
+fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+        match code {
+            0 => {
+                parcel_remote_primitive(data, reply);
+                parcel_remote_vec(data, reply);
+            }
+            _ => unreachable!(),
+        }
+        0
+    }
+Unixcoder Score: 0.0835990235209465
+--------------------------------------------------
+C_Code: 
+int32_t InvokerListenThreadStub(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option, OnRemoteRequest func)
+{
+    (void)code;
+    (void)data;
+    (void)reply;
+    (void)option;
+    (void)func;
+    return ERR_NONE;
+}
+Function: 
+fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+        R::on_remote_request(self, code, data, reply)
+    }
+Unixcoder Score: 0.07741336524486542
+--------------------------------------------------
+C_Code: 
+static int32_t DBinderRemoteRequest(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption *option)
+{
+    int32_t ret = -1;
+    switch (code) {
+        case GET_PROTO_INFO: {
+            ret = ProcessProto(code, data, reply, option);
+            break;
+        }
+        default: {
+            RPC_LOG_ERROR("unknown dbinder code %u", code);
+            break;
+        }
+    }
+    return ret;
+}
+Function: 
+pub fn async_send_request<F, R>(
+        self: &Arc<Self>,
+        code: u32,
+        mut data: MsgParcel,
+        mut option: MsgOption,
+        call_back: F,
+    ) where
+        F: FnOnce(MsgParcel) -> R,
+        F: Send + 'static,
+        R: Send + 'static,
+    {
+        let remote = self.clone();
+        Runtime::spawn_blocking(move || {
+            let reply = remote.send_request(code, &mut data);
+            match reply {
+                Ok(reply) => {
+                    call_back(reply);
+                    IpcStatusCode::Ok
+                }
+                _ => IpcStatusCode::Failed,
+            }
+        });
+    }
+Unixcoder Score: 0.0665549635887146
+--------------------------------------------------
+C_Code: 
+int32_t GrantDataBusNameStub(uint32_t code, IpcIo *data, IpcIo *reply, MessageOption option)
+{
+    (void)code;
+    (void)data;
+    (void)reply;
+    (void)option;
+    return ERR_NONE;
+}
+Function: 
+fn on_remote_request(&self, code: u32, data: &mut MsgParcel, reply: &mut MsgParcel) -> i32 {
+        R::on_remote_request(self, code, data, reply)
+    }
+Unixcoder Score: 0.058740172535181046
+--------------------------------------------------

@@ -108,12 +108,15 @@ Output ONLY the Rust type, nothing else. Example outputs:
 Rust type:'''
 
     try:
-        response = client.chat.completions.create(
+        kwargs = dict(
             model=_llm_model,
             messages=[{"role": "user", "content": prompt}],
             max_tokens=100,
-            temperature=0.0
+            temperature=0.0,
         )
+        if "deepseek-v4" in str(_llm_model).lower():
+            kwargs["extra_body"] = {"thinking": {"type": "disabled"}}
+        response = client.chat.completions.create(**kwargs)
         
         result = response.choices[0].message.content.strip()
         

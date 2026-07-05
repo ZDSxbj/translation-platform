@@ -1,0 +1,129 @@
+C_Code: 
+struct RemoteServiceStub
+Function: 
+pub struct AbilityStub {
+    remote: RemoteStubWrapper,
+}
+Unixcoder Score: 0.09047689288854599
+--------------------------------------------------
+C_Code: 
+struct RemoteServiceStub
+Function: 
+pub struct AbilityStub {
+    inner: Box<dyn RemoteStub>,
+}
+Unixcoder Score: 0.08650024235248566
+--------------------------------------------------
+C_Code: 
+struct RemoteServiceStub
+Function: 
+pub struct SystemAbility {
+    inner: UniquePtr<SystemAbilityWrapper>,
+}
+Unixcoder Score: 0.08341973274946213
+--------------------------------------------------
+C_Code: 
+struct RemoteServiceStub
+Function: 
+pub struct UnsubscribeHandler {
+    inner: Unsubscribe,
+}
+Unixcoder Score: 0.07535911351442337
+--------------------------------------------------
+C_Code: 
+sptr<IFoo> TestServiceProxy::TestGetFooService()
+{
+    MessageOption option;
+    MessageParcel dataParcel;
+    MessageParcel replyParcel;
+    Remote()->SendRequest(TRANS_ID_GET_FOO_SERVICE, dataParcel, replyParcel, option);
+    auto rep = replyParcel.ReadRemoteObject();
+    if (rep == nullptr) {
+        ZLOGE(LABEL, "null foo service");
+        return nullptr;
+    }
+    return iface_cast<IFoo>(rep);
+}
+Function: 
+fn parcel_remote_primitive(data: &mut MsgParcel, reply: &mut MsgParcel) {
+    reply
+        .write_interface_token(data.read_interface_token().unwrap().as_str())
+        .unwrap();
+    let w = data.read_buffer(TEST_LEN).unwrap();
+    reply.write_buffer(&w);
+
+    reply.write_file(data.read_file().unwrap());
+
+    reply.write(&data.read::<bool>().unwrap());
+    reply.write(&data.read::<bool>().unwrap());
+    reply.write(&data.read::<i8>().unwrap());
+    reply.write(&data.read::<i8>().unwrap());
+    reply.write(&data.read::<i16>().unwrap());
+    reply.write(&data.read::<i16>().unwrap());
+    reply.write(&data.read::<i32>().unwrap());
+    reply.write(&data.read::<i32>().unwrap());
+    reply.write(&data.read::<i64>().unwrap());
+    reply.write(&data.read::<i64>().unwrap());
+
+    reply.write(&data.read::<u8>().unwrap());
+    reply.write(&data.read::<u8>().unwrap());
+    reply.write(&data.read::<u16>().unwrap());
+    reply.write(&data.read::<u16>().unwrap());
+    reply.write(&data.read::<u32>().unwrap());
+    reply.write(&data.read::<u32>().unwrap());
+    reply.write(&data.read::<u64>().unwrap());
+    reply.write(&data.read::<u64>().unwrap());
+
+    reply.write(&data.read::<usize>().unwrap());
+    reply.write(&data.read::<usize>().unwrap());
+}
+Unixcoder Score: 0.061739277094602585
+--------------------------------------------------
+C_Code: 
+struct CacheDownloadService
+Function: 
+pub struct CacheDownloadService {
+    running_tasks: Mutex<HashMap<TaskId, Arc<Mutex<DownloadTask>>>>,
+    cache_manager: CacheManager,
+    info_mgr: Arc<DownloadInfoMgr>,
+    net_registrar: NetRegistrar,
+}
+Unixcoder Score: 0.03574955090880394
+--------------------------------------------------
+C_Code: 
+struct CacheDownloadService
+Function: 
+pub struct RustDownloadInfo {
+    info: DownloadInfo,
+}
+Unixcoder Score: 0.03474188596010208
+--------------------------------------------------
+C_Code: 
+struct upb_ServiceDef
+Function: 
+pub struct SerializedData {
+    /// Owns the memory.
+    data: NonNull<u8>,
+    len: usize,
+}
+Unixcoder Score: 0.03177276626229286
+--------------------------------------------------
+C_Code: 
+struct CacheDownloadService
+Function: 
+pub struct CacheDownloadService {
+    running_tasks: Mutex<HashMap<TaskId, Arc<Mutex<DownloadTask>>>>,
+    cache_manager: CacheManager,
+    info_mgr: Arc<DownloadInfoMgr>,
+    net_registrar: NetRegistrar,
+}
+Unixcoder Score: 0.018696118146181107
+--------------------------------------------------
+C_Code: 
+struct CacheDownloadService
+Function: 
+pub struct RustData {
+    data: Arc<RamCache>,
+}
+Unixcoder Score: 0.017180785536766052
+--------------------------------------------------
